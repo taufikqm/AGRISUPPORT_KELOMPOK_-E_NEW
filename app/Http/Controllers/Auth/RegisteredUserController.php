@@ -52,15 +52,40 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        // TODO: Implementasi di sini
+        return Inertia::render('Auth/Register');
     }
 
     /**
      * TODO: Proses pembuatan akun pengguna baru.
      * Validasi input, simpan ke database, login otomatis, redirect ke dashboard.
      */
+    /**
+     * Handle an incoming registration request.
+     *
+     * @throws ValidationException
+     */
     public function store(Request $request): RedirectResponse
     {
-        // TODO: Implementasi di sini
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'phone_number' => ['required', 'string', 'regex:/^\+62[0-9]{8,15}$/'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'phone_number.regex' => 'Nomor telepon harus diawali dengan +62 dan berisi angka saja.',
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'password' => Hash::make($request->password),
+        ]);
+
+        event(new Registered($user));
+
+        Auth::login($user);
+
+        return redirect(route('wilayah-lahan.index', absolute: false));
     }
 }
