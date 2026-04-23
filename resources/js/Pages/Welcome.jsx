@@ -1,171 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 
-/* ─── Icons (inline SVGs) ─── */
-function ArrowRightIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-        </svg>
-    );
-}
-function LeafIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21c-4-4-8-8-8-13a8 8 0 0 1 16 0c0 5-4 9-8 13Z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21V8" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="m8 11 4-3 4 3" />
-        </svg>
-    );
-}
-function DatabaseIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75" />
-        </svg>
-    );
-}
-function SunIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-        </svg>
-    );
-}
-function ChartIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-        </svg>
-    );
-}
-function MapIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
-        </svg>
-    );
-}
-function LightBulbIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-        </svg>
-    );
-}
-function QuoteIcon({ className }) {
-    return (
-        <svg className={className} viewBox="0 0 64 64" fill="currentColor" opacity="0.1">
-            <path d="M14.4 36.8c0-6.4 4.8-12.8 14.4-19.2l2.4 3.2c-6.4 5.6-9.6 10.4-9.6 14.4 0 1.6.8 2.4 2.4 2.4 3.2 0 5.6 2.4 5.6 5.6s-2.4 5.6-5.6 5.6c-5.6 0-9.6-4.8-9.6-12ZM38.4 36.8c0-6.4 4.8-12.8 14.4-19.2l2.4 3.2c-6.4 5.6-9.6 10.4-9.6 14.4 0 1.6.8 2.4 2.4 2.4 3.2 0 5.6 2.4 5.6 5.6s-2.4 5.6-5.6 5.6c-5.6 0-9.6-4.8-9.6-12Z" />
-        </svg>
-    );
-}
+import { MODULE_CARDS } from '@/data/landingData';
+import { SunIcon, ChartIcon, MapIcon, LightBulbIcon } from '@/Components/Landing/LandingIcons';
+import LandingNavbar    from '@/Components/Landing/LandingNavbar';
+import HeroSection      from '@/Components/Landing/HeroSection';
+import AboutSection     from '@/Components/Landing/AboutSection';
+import LayananSection   from '@/Components/Landing/LayananSection';
+import ModulSection     from '@/Components/Landing/ModulSection';
+import TestimoniSection from '@/Components/Landing/TestimoniSection';
+import LandingFooter    from '@/Components/Landing/LandingFooter';
 
-function MenuIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
-    );
-}
+// Inject Icon references into SERVICE_CARDS (cannot be stored in plain .js file)
+import { SERVICE_CARDS as BASE_SERVICE_CARDS } from '@/data/landingData';
+const ICON_MAP = { SunIcon, ChartIcon, MapIcon, LightBulbIcon };
 
-function XIcon({ className }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-        </svg>
-    );
-}
-
-/* ─── Module Tab Data ─── */
-const MODULE_TABS = [
-    { key: 'semua', label: 'Semua' },
-    { key: 'dashboard', label: 'Dashboard' },
-    { key: 'riwayat', label: 'Riwayat Lahan' },
-    { key: 'insight', label: 'Insight' },
-];
-
-const MODULE_CARDS = [
-    {
-        key: 'dashboard',
-        tag: 'Dashboard',
-        title: 'Dashboard Utama',
-        desc: 'Pantau ringkasan kondisi cuaca, peringatan dini, dan status lahan dalam satu layar yang bersih.',
-        img: '/images/landing/dashboard.png',
-    },
-    {
-        key: 'riwayat',
-        tag: 'Riwayat Lahan',
-        title: 'Pemetaan Risiko',
-        desc: 'Visualisasi area rentan genangan atau kekeringan dari waktu ke waktu dengan integrasi peta.',
-        img: '/images/landing/riskmap.png',
-    },
-    {
-        key: 'insight',
-        tag: 'Insight',
-        title: 'Analisis & Prediksi',
-        desc: 'Grafik historis dan model prediksi tren iklim untuk perencanaan musim tanam yang optimal.',
-        img: '/images/landing/analytics.png',
-    },
-];
-
-/* ─── Service Feature Cards Data ─── */
-const SERVICE_CARDS = [
-    {
-        title: 'Prakiraan Cuaca Tepat',
-        desc: 'Data real-time berbasis koordinat untuk merencanakan aktivitas harian.',
-        img: '/images/landing/weather.png',
-        Icon: SunIcon,
-    },
-    {
-        title: 'Insight Historis',
-        desc: 'Analisis tren iklim dan hasil panen untuk evaluasi produktivitas jangka panjang.',
-        img: '/images/landing/insight.png',
-        Icon: ChartIcon,
-    },
-    {
-        title: 'Peta Risiko Lahan',
-        desc: 'Visualisasi area yang rentan terhadap genangan atau kekeringan ekstrem.',
-        img: '/images/landing/risk.png',
-        Icon: MapIcon,
-    },
-    {
-        title: 'Rekomendasi Tindakan',
-        desc: 'Saran praktis berbasis data hibrida untuk menyelamatkan dan meningkatkan panen.',
-        img: '/images/landing/recommendation.png',
-        Icon: LightBulbIcon,
-    },
-];
-
-/* ─── Testimonials ─── */
-const TESTIMONIALS = [
-    {
-        name: 'Bapak Budi',
-        role: 'Petani Padi, Jawa Tengah',
-        quote: '"AgriSupport membantu saya menghindari gagal panen bulan lalu berkat fitur prediksi genangannya. UI-nya sangat gampang dipahami, bahkan untuk saya yang jarang pakai tablet."',
-        avatar: '/images/landing/avatar_budi.png',
-    },
-    {
-        name: 'Ibu Siti',
-        role: 'Ketua Kelompok Tani',
-        quote: '"Pembaruan cuaca dan rekomendasi tindakan harian sangat akurat. Kami kini bisa merencanakan penyebaran pupuk secara optimal tanpa khawatir tergerus hujan."',
-        avatar: '/images/landing/avatar_siti.png',
-    },
-];
-
-/* ═══════════════════════════════════════════════════════════════════ */
-/* ─── MAIN COMPONENT ─── */
-/* ═══════════════════════════════════════════════════════════════════ */
 export default function Welcome({ auth, canLogin, canRegister }) {
-    const [scrolled, setScrolled] = useState(false);
-    const [moduleTab, setModuleTab] = useState('semua');
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [scrolled, setScrolled]       = useState(false);
+    const [moduleTab, setModuleTab]     = useState('semua');
 
-    /* Section refs for smooth scrolling */
-    const aboutRef = useRef(null);
-    const featureRef = useRef(null);
-    const modulRef = useRef(null);
-    const testimoniRef = useRef(null);
+    const aboutRef      = useRef(null);
+    const featureRef    = useRef(null);
+    const modulRef      = useRef(null);
+    const testimoniRef  = useRef(null);
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 30);
@@ -173,9 +30,7 @@ export default function Welcome({ auth, canLogin, canRegister }) {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const scrollTo = (ref) => {
-        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
+    const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     const filteredModules = moduleTab === 'semua'
         ? MODULE_CARDS
@@ -186,429 +41,39 @@ export default function Welcome({ auth, canLogin, canRegister }) {
             <Head title="AgriSupport - Cerdas Bertani, Tangguh Hadapi Perubahan Iklim" />
 
             <div className="min-h-screen bg-white font-['Inter',sans-serif] text-[#0f172b] overflow-x-hidden">
+                <LandingNavbar
+                    auth={auth}
+                    canLogin={canLogin}
+                    canRegister={canRegister}
+                    scrolled={scrolled}
+                    scrollTo={scrollTo}
+                    aboutRef={aboutRef}
+                    featureRef={featureRef}
+                    modulRef={modulRef}
+                    testimoniRef={testimoniRef}
+                />
 
-                {/* ═══════════ NAVBAR ═══════════ */}
-                <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
-                    scrolled
-                        ? 'bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] shadow-sm py-3'
-                        : 'bg-transparent py-5'
-                }`}>
-                    <div className="max-w-[1280px] mx-auto px-6 flex items-center justify-between">
-                        {/* Logo */}
-                        <div className="flex items-center gap-2 shrink-0">
-                            <span className={`text-[20px] md:text-[24px] font-extrabold tracking-[-0.6px] transition-colors duration-300 ${
-                                (scrolled || isMenuOpen) ? 'text-[#007a55]' : 'text-white'
-                            }`}>
-                                AgriSupport
-                            </span>
-                        </div>
+                <HeroSection
+                    auth={auth}
+                    canLogin={canLogin}
+                    scrollTo={scrollTo}
+                    featureRef={featureRef}
+                />
 
-                        {/* Desktop Nav Links */}
-                        <div className="hidden lg:flex items-center gap-8">
-                            {[
-                                { label: 'Tentang', ref: aboutRef },
-                                { label: 'Fitur', ref: featureRef },
-                                { label: 'Modul', ref: modulRef },
-                                { label: 'Testimoni', ref: testimoniRef },
-                            ].map(item => (
-                                <button
-                                    key={item.label}
-                                    onClick={() => scrollTo(item.ref)}
-                                    className={`text-[14px] font-semibold transition-colors duration-300 hover:opacity-80 ${
-                                        scrolled ? 'text-[#45556c]' : 'text-white/90'
-                                    }`}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
+                <AboutSection aboutRef={aboutRef} />
 
-                        {/* Desktop Auth & Mobile Toggle */}
-                        <div className="flex items-center gap-3">
-                            <div className="hidden sm:flex items-center gap-3">
-                                {auth?.user ? (
-                                    <Link
-                                        href={route('dashboard')}
-                                        className="bg-[#009966] text-white px-5 py-2 rounded-xl text-[14px] font-semibold shadow-md hover:bg-[#007a55] transition-colors"
-                                    >
-                                        Dashboard
-                                    </Link>
-                                ) : (
-                                    <>
-                                        {canRegister && (
-                                            <Link
-                                                href={route('register')}
-                                                className={`px-4 py-2 rounded-xl text-[14px] font-semibold border transition-all duration-300 ${
-                                                    scrolled
-                                                        ? 'border-[#009966] text-[#007a55] hover:bg-[#f0fdf4]'
-                                                        : 'border-white/30 text-white hover:bg-white/10'
-                                                }`}
-                                            >
-                                                Daftar
-                                            </Link>
-                                        )}
-                                        {canLogin && (
-                                            <Link
-                                                href={route('login')}
-                                                className="bg-[#009966] text-white px-4 py-2 rounded-xl text-[14px] font-semibold shadow-md hover:bg-[#007a55] transition-colors"
-                                            >
-                                                Masuk
-                                            </Link>
-                                        )}
-                                    </>
-                                )}
-                            </div>
+                <LayananSection featureRef={featureRef} />
 
-                            {/* Mobile Menu Toggle */}
-                            <button 
-                                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className={`p-2 rounded-lg transition-colors lg:hidden ${
-                                    (scrolled || isMenuOpen) ? 'text-[#45556c] hover:bg-gray-100' : 'text-white hover:bg-white/10'
-                                }`}
-                            >
-                                {isMenuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
-                            </button>
-                        </div>
-                    </div>
+                <ModulSection
+                    modulRef={modulRef}
+                    moduleTab={moduleTab}
+                    setModuleTab={setModuleTab}
+                    filteredModules={filteredModules}
+                />
 
-                    {/* Mobile Menu Drawer */}
-                    <div className={`lg:hidden fixed inset-x-0 top-[60px] md:top-[72px] bg-white border-b border-gray-200 transition-all duration-300 origin-top overflow-hidden z-40 ${
-                        isMenuOpen ? 'max-h-[500px] opacity-100 py-6' : 'max-h-0 opacity-0 py-0'
-                    }`}>
-                        <div className="px-6 space-y-4">
-                            {[
-                                { label: 'Tentang', ref: aboutRef },
-                                { label: 'Fitur', ref: featureRef },
-                                { label: 'Modul', ref: modulRef },
-                                { label: 'Testimoni', ref: testimoniRef },
-                            ].map(item => (
-                                <button
-                                    key={item.label}
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        setTimeout(() => scrollTo(item.ref), 300);
-                                    }}
-                                    className="block w-full text-left text-[16px] font-semibold text-[#45556c] py-2 border-b border-gray-50 last:border-0"
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                            <div className="pt-4 flex flex-col gap-3 sm:hidden">
-                                {auth?.user ? (
-                                    <Link
-                                        href={route('dashboard')}
-                                        className="w-full text-center bg-[#009966] text-white py-3 rounded-xl text-[16px] font-semibold"
-                                    >
-                                        Dashboard
-                                    </Link>
-                                ) : (
-                                    <>
-                                        <Link
-                                            href={route('register')}
-                                            className="w-full text-center border border-[#009966] text-[#007a55] py-3 rounded-xl text-[16px] font-semibold"
-                                        >
-                                            Daftar
-                                        </Link>
-                                        <Link
-                                            href={route('login')}
-                                            className="w-full text-center bg-[#009966] text-white py-3 rounded-xl text-[16px] font-semibold"
-                                        >
-                                            Masuk
-                                        </Link>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </nav>
+                <TestimoniSection testimoniRef={testimoniRef} />
 
-                {/* ═══════════ HERO SECTION ═══════════ */}
-                <section className="relative min-h-[600px] md:h-[700px] flex items-center overflow-hidden">
-                    {/* Background Image */}
-                    <img
-                        src="/images/landing/hero.png"
-                        alt="Petani modern menggunakan tablet di sawah"
-                        className="absolute inset-0 w-full h-full object-cover"
-                    />
-                    {/* Gradient Overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[rgba(15,23,43,0.9)] via-[rgba(15,23,43,0.7)] to-[rgba(15,23,43,0.3)] lg:from-[rgba(15,23,43,0.85)]" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[rgba(15,23,43,0.6)] via-transparent to-transparent" />
-
-                    {/* Hero Content */}
-                    <div className="relative z-10 w-full max-w-[1280px] mx-auto px-6 py-32 md:py-0">
-                        <div className="max-w-[640px] text-center md:text-left mx-auto md:mx-0">
-                            <h1 className="text-[36px] min-[400px]:text-[42px] md:text-[60px] font-extrabold leading-[1.1] tracking-[-1px] md:tracking-[-2px] text-white mb-6">
-                                Cerdas Bertani,{' '}
-                                <span className="text-[#00d492]">Tangguh Hadapi</span>{' '}
-                                Perubahan Iklim
-                            </h1>
-                            <p className="text-[16px] md:text-[20px] font-medium leading-[1.6] text-[#e2e8f0] mb-10 max-w-[576px] mx-auto md:mx-0">
-                                Integrasi cerdas data cuaca terkini dan kondisi lapangan untuk memitigasi risiko pertanian. Lindungi panen Anda dengan keputusan berbasis data.
-                            </p>
-                            <div className="flex flex-col min-[450px]:flex-row items-center justify-center md:justify-start gap-4">
-                                {auth?.user ? (
-                                    <Link
-                                        href={route('dashboard')}
-                                        className="w-full min-[450px]:w-auto inline-flex items-center justify-center gap-2 bg-[#00bc7d] hover:bg-[#00a06b] text-white px-8 py-4 rounded-2xl text-[16px] font-semibold transition-all duration-200 shadow-lg shadow-[#00bc7d]/25"
-                                    >
-                                        Buka Dashboard Saya
-                                        <ArrowRightIcon className="w-5 h-5" />
-                                    </Link>
-                                ) : (
-                                    <Link
-                                        href={canLogin ? route('login') : '#'}
-                                        className="w-full min-[450px]:w-auto inline-flex items-center justify-center gap-2 bg-[#00bc7d] hover:bg-[#00a06b] text-white px-8 py-4 rounded-2xl text-[16px] font-semibold transition-all duration-200 shadow-lg shadow-[#00bc7d]/25"
-                                    >
-                                        Buka Dashboard Saya
-                                        <ArrowRightIcon className="w-5 h-5" />
-                                    </Link>
-                                )}
-                                <button
-                                    onClick={() => scrollTo(featureRef)}
-                                    className="w-full min-[450px]:w-auto inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/30 text-white px-8 py-4 rounded-2xl text-[16px] font-semibold transition-all duration-200"
-                                >
-                                    Pelajari Fitur
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* ═══════════ MISI / ABOUT SECTION ═══════════ */}
-                <section ref={aboutRef} className="bg-[#f8fafc] border-y border-[#e2e8f0] py-16 md:py-24">
-                    <div className="max-w-[1280px] mx-auto px-6">
-                        {/* Section Heading */}
-                        <div className="text-center mb-12">
-                            <h2 className="text-[28px] md:text-[36px] font-extrabold text-[#0f172b] leading-[1.2] mb-4">
-                                Misi Kami Mengamankan Panen dari Cuaca Ekstrem
-                            </h2>
-                            <p className="text-[16px] md:text-[20px] font-medium leading-[1.6] text-[#45556c] max-w-[976px] mx-auto">
-                                Perubahan iklim memicu cuaca ekstrem yang secara langsung mengancam ketahanan pangan dan mata pencaharian petani.{' '}
-                                <span className="font-bold text-[#007a55]">AgriSupport</span>{' '}
-                                mendedikasikan sistem pendukung keputusan yang mudah diakses, membantu petani mengubah ketidakpastian cuaca menjadi langkah adaptasi yang cerdas dan terukur.
-                            </p>
-                        </div>
-
-                        {/* Vision Cards */}
-                        <div className="grid md:grid-cols-2 gap-8">
-                            {/* Card 1 */}
-                            <div className="bg-white rounded-2xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
-                                <div className="w-14 h-14 bg-[#d0fae5] rounded-2xl flex items-center justify-center mb-8">
-                                    <LeafIcon className="w-7 h-7 text-[#009966]" />
-                                </div>
-                                <h3 className="text-[24px] font-bold text-[#0f172b] mb-4 leading-[1.3]">
-                                    Visi Berkelanjutan
-                                </h3>
-                                <p className="text-[16px] font-normal leading-[1.6] text-[#45556c]">
-                                    Pertanian yang tangguh dimulai dari adaptasi yang cerdas. Kami merancang AgriSupport untuk membantu Anda memitigasi risiko cuaca ekstrem dan menjaga keberlanjutan hasil panen di masa depan.
-                                </p>
-                            </div>
-                            {/* Card 2 */}
-                            <div className="bg-white rounded-2xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
-                                <div className="w-14 h-14 bg-[#d0fae5] rounded-2xl flex items-center justify-center mb-8">
-                                    <DatabaseIcon className="w-7 h-7 text-[#009966]" />
-                                </div>
-                                <h3 className="text-[24px] font-bold text-[#0f172b] mb-4 leading-[1.3]">
-                                    Pendekatan Hybrid Data
-                                </h3>
-                                <p className="text-[16px] font-normal leading-[1.6] text-[#45556c]">
-                                    Keputusan terbaik lahir dari data yang utuh. Kami menyatukan prakiraan cuaca global dengan laporan kondisi aktual dari lahan Anda, menghasilkan rekomendasi yang sangat presisi dan personal.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* ═══════════ LAYANAN UTAMA SECTION ═══════════ */}
-                <section ref={featureRef} className="bg-white py-16 md:py-24">
-                    <div className="max-w-[1280px] mx-auto px-6">
-                        <div className="text-center mb-16">
-                            <h2 className="text-[28px] md:text-[36px] font-extrabold text-[#0f172b] leading-[1.2] mb-4">
-                                Layanan Utama Kami
-                            </h2>
-                            <p className="text-[16px] md:text-[18px] font-medium leading-[1.55] text-[#45556c] max-w-[768px] mx-auto">
-                                Empat pilar fitur utama yang dirancang untuk merespons dinamika lahan dan iklim secara proaktif.
-                            </p>
-                        </div>
-
-                        {/* Feature Cards Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {SERVICE_CARDS.map((card) => (
-                                <div
-                                    key={card.title}
-                                    className="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
-                                >
-                                    {/* Image */}
-                                    <div className="relative h-[192px] overflow-hidden">
-                                        <img
-                                            src={card.img}
-                                            alt={card.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                        <div className="absolute inset-0 bg-[rgba(15,23,43,0.1)]" />
-                                        {/* Icon Badge */}
-                                        <div className="absolute bottom-[-16px] right-[24px] w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center z-10">
-                                            <card.Icon className="w-6 h-6 text-[#009966]" />
-                                        </div>
-                                    </div>
-                                    {/* Content */}
-                                    <div className="p-6 pt-10">
-                                        <h3 className="text-[20px] font-bold text-[#0f172b] leading-[1.4] mb-2">
-                                            {card.title}
-                                        </h3>
-                                        <p className="text-[14px] font-normal leading-[1.6] text-[#45556c]">
-                                            {card.desc}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* ═══════════ MODUL APLIKASI SECTION (Dark) ═══════════ */}
-                <section ref={modulRef} className="bg-[#0f172b] py-16 md:py-24">
-                    <div className="max-w-[1280px] mx-auto px-6">
-                        {/* Section Heading */}
-                        <div className="text-center mb-12">
-                            <h2 className="text-[28px] md:text-[36px] font-extrabold text-white leading-[1.2] mb-4">
-                                Modul Aplikasi
-                            </h2>
-                            <p className="text-[16px] md:text-[18px] font-medium leading-[1.55] text-[#cad5e2] max-w-[768px] mx-auto">
-                                Eksplorasi antarmuka digital kami yang bersih, bebas gangguan, dan difokuskan pada fungsionalitas.
-                            </p>
-                        </div>
-
-                        {/* Tab Switcher */}
-                        <div className="flex flex-wrap items-center justify-center gap-2 mb-12 md:mb-16">
-                            {MODULE_TABS.map(tab => (
-                                <button
-                                    key={tab.key}
-                                    onClick={() => setModuleTab(tab.key)}
-                                    className={`px-6 py-2.5 rounded-full text-[14px] font-semibold transition-all duration-200 ${
-                                        moduleTab === tab.key
-                                            ? 'bg-[#00bc7d] text-white shadow-lg shadow-[rgba(0,188,125,0.3)]'
-                                            : 'bg-[#1d293d] text-[#cad5e2] hover:bg-[#263548]'
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Module Cards Grid */}
-                        <div className={`grid gap-8 ${
-                            filteredModules.length === 1 ? 'grid-cols-1 max-w-[400px] mx-auto' :
-                            filteredModules.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-[700px] mx-auto' :
-                            'grid-cols-1 md:grid-cols-3'
-                        }`}>
-                            {filteredModules.map(card => (
-                                <div
-                                    key={card.key}
-                                    className="bg-[#1d293d] border border-[#314158] rounded-3xl overflow-hidden shadow-xl hover:border-[#00bc7d]/40 transition-all duration-300 group"
-                                >
-                                    {/* Screenshot */}
-                                    <div className="relative h-[240px] overflow-hidden">
-                                        <img
-                                            src={card.img}
-                                            alt={card.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                        <div className="absolute inset-0 bg-[rgba(15,23,43,0.2)]" />
-                                        {/* Tag */}
-                                        <div className="absolute top-4 left-4 bg-[rgba(15,23,43,0.8)] px-3 py-1 rounded-xl">
-                                            <span className="text-[12px] font-bold text-[#00d492] uppercase tracking-wider">
-                                                {card.tag}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {/* Content */}
-                                    <div className="p-8">
-                                        <h3 className="text-[24px] font-bold text-white leading-[1.3] mb-3">
-                                            {card.title}
-                                        </h3>
-                                        <p className="text-[16px] font-normal leading-[1.6] text-[#90a1b9]">
-                                            {card.desc}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* ═══════════ TESTIMONI SECTION ═══════════ */}
-                <section ref={testimoniRef} className="bg-[#ecfdf5] py-16 md:py-24">
-                    <div className="max-w-[1280px] mx-auto px-6">
-                        <h2 className="text-[28px] md:text-[36px] font-extrabold text-[#0f172b] text-center leading-[1.2] mb-12 md:mb-16">
-                            Dipercaya oleh Petani
-                        </h2>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {TESTIMONIALS.map(t => (
-                                <div
-                                    key={t.name}
-                                    className="bg-white rounded-3xl shadow-lg p-8 relative hover:shadow-xl transition-shadow duration-300"
-                                >
-                                    {/* Quote Icon */}
-                                    <div className="absolute right-8 top-8">
-                                        <QuoteIcon className="w-16 h-16 text-[#009966]" />
-                                    </div>
-
-                                    {/* Author Header */}
-                                    <div className="flex items-center gap-4 mb-6">
-                                        <div className="w-16 h-16 rounded-full border-2 border-[#d0fae5] p-0.5 overflow-hidden shrink-0">
-                                            <img
-                                                src={t.avatar}
-                                                alt={t.name}
-                                                className="w-full h-full rounded-full object-cover"
-                                            />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-[18px] font-bold text-[#0f172b] leading-[1.5]">
-                                                {t.name}
-                                            </h4>
-                                            <p className="text-[14px] font-semibold text-[#009966] leading-[1.4]">
-                                                {t.role}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Quote */}
-                                    <p className="text-[18px] italic leading-[1.6] text-[#45556c]">
-                                        {t.quote}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* ═══════════ FOOTER ═══════════ */}
-                <footer className="bg-white border-t border-[#e2e8f0] py-12">
-                    <div className="max-w-[1024px] mx-auto px-6 text-center">
-                        <h3 className="text-[24px] font-extrabold text-[#0f172b] mb-2">
-                            AgriSupport
-                        </h3>
-                        <p className="text-[16px] font-medium text-[#62748e] mb-8">
-                            Sistem Pendukung Keputusan Cerdas Pertanian
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-8">
-                            <a href="#" className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors">
-                                Kebijakan Privasi
-                            </a>
-                            <a href="#" className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors">
-                                Syarat & Ketentuan
-                            </a>
-                            <a href="#" className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors">
-                                Kontak
-                            </a>
-                        </div>
-                        <p className="text-[14px] font-medium text-[#90a1b9]">
-                            © 2026 AgriSupport. Hak Cipta Dilindungi.
-                        </p>
-                    </div>
-                </footer>
+                <LandingFooter />
             </div>
         </>
     );
