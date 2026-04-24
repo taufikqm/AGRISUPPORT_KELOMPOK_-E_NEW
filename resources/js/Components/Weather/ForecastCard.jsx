@@ -1,55 +1,38 @@
-/**
- * ============================================================
- * AGS-35 | ST-03 — Prakiraan & Peringatan Cuaca
- * ============================================================
- *
- * KOMPONEN: ForecastCard
- * Menampilkan ringkasan cuaca untuk satu hari dalam prakiraan
- * 5 hari ke depan.
- *
- * PROPS:
- *   @param {number}  index   — indeks hari (0 = hari ini, 1 = besok, dst.)
- *   @param {Object}  daily   — data prakiraan harian dari Open-Meteo:
- *     · daily.time                        — array tanggal ["2026-04-25", ...]
- *     · daily.weather_code                — array kode WMO per hari
- *     · daily.temperature_2m_max          — array suhu maksimum per hari
- *     · daily.temperature_2m_min          — array suhu minimum per hari
- *     · daily.precipitation_probability_max — array probabilitas hujan (%)
- *   @param {boolean} isFirst — true jika ini hari ini (index === 0)
- *
- * YANG PERLU DIKERJAKAN:
- *   1. Nama Hari
- *      - Jika isFirst = true → tampilkan "Hari Ini"
- *      - Jika isFirst = false → tampilkan nama hari (Senin, Selasa, dst.)
- *        gunakan: new Date(daily.time[index]).toLocaleDateString('id-ID', { weekday: 'long' })
- *      - Tampilkan juga tanggal singkat (misal: "25 Apr")
- *
- *   2. Ikon Cuaca
- *      - Gunakan fungsi getWmoDetails(daily.weather_code[index])
- *        untuk mendapatkan emoji cuaca yang sesuai
- *      - Catatan: bisa import getWmoDetails dari CurrentWeatherCard,
- *        atau definisikan ulang di sini
- *
- *   3. Suhu Maksimum & Minimum
- *      - Tampilkan suhu maks dengan warna merah/hangat (▲)
- *      - Tampilkan suhu min dengan warna biru/dingin (▼)
- *      - Bulatkan angka: Math.round(...)
- *
- *   4. Probabilitas Hujan
- *      - Tampilkan: "🌧️ {precipitation_probability_max[index]}%"
- *
- *   5. Visual Hari Ini
- *      - Kartu "Hari Ini" (isFirst = true) tampil dengan border/ring
- *        yang berbeda dari hari lainnya untuk memberi penekanan visual
- *
- * HASIL YANG DIHARAPKAN:
- *   Petani mendapat gambaran cuaca hari-hari mendatang dalam
- *   tampilan kartu yang ringkas dan mudah dipahami.
- * ============================================================
- */
+import { getWmoDetails } from '@/Components/Weather/CurrentWeatherCard';
 
-// TODO ST-03: Implementasi komponen ForecastCard
 export default function ForecastCard({ index, daily, isFirst }) {
-    // TODO ST-03: Implementasi di sini
-    return null;
+    const date = new Date(daily.time[index]);
+    const dayName = isFirst ? 'Hari Ini' : date.toLocaleDateString('id-ID', { weekday: 'long' });
+    const dateStr = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    const weather = getWmoDetails(daily.weather_code[index]);
+
+    return (
+        <div className={`bg-white rounded-xl border ${isFirst ? 'border-[#2D5A27] ring-1 ring-[#2D5A27]/20' : 'border-gray-200'} p-3 md:p-4 transition-all hover:shadow-sm`}>
+            <div className="text-center">
+                <p className={`text-[10px] md:text-[11px] font-bold uppercase tracking-wide ${isFirst ? 'text-[#2D5A27]' : 'text-gray-500'}`}>{dayName}</p>
+                <p className="text-[9px] md:text-[10px] text-gray-400 mt-0.5">{dateStr}</p>
+                <div className="text-3xl md:text-4xl my-2 md:my-3">
+                    <span>{weather.emoji}</span>
+                </div>
+                <p className="text-[10px] md:text-[11px] font-semibold text-gray-600 mb-2 md:mb-3 min-h-[30px] md:min-h-[32px]">{weather.text}</p>
+                <div className="space-y-1.5 md:space-y-2">
+                    <div className="flex items-center justify-between text-[10px] md:text-[11px]">
+                        <span className="text-red-500 font-semibold md:hidden">▲</span>
+                        <span className="text-red-500 font-semibold hidden md:inline">▲ Maks</span>
+                        <span className="font-bold text-gray-800">{Math.round(daily.temperature_2m_max[index])}°C</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] md:text-[11px]">
+                        <span className="text-blue-500 font-semibold md:hidden">▼</span>
+                        <span className="text-blue-500 font-semibold hidden md:inline">▼ Min</span>
+                        <span className="font-bold text-gray-800">{Math.round(daily.temperature_2m_min[index])}°C</span>
+                    </div>
+                    <div className="pt-2 border-t border-gray-100">
+                        <div className="flex items-center justify-between text-[9px] md:text-[11px]">
+                            <span className="text-gray-400">🌧️ {daily.precipitation_probability_max[index]}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }

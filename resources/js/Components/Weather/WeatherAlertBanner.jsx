@@ -1,66 +1,50 @@
-/**
- * ============================================================
- * AGS-35 | ST-03 — Prakiraan & Peringatan Cuaca
- * ============================================================
- *
- * KOMPONEN: WeatherAlertBanner
- * Menampilkan banner peringatan otomatis di bagian atas halaman
- * jika kondisi cuaca melebihi batas aman.
- *
- * PROPS:
- *   @param {Object} current — data cuaca saat ini dari Open-Meteo:
- *     · current.precipitation         — curah hujan (mm)
- *     · current.relative_humidity_2m  — kelembapan (%)
- *     · current.wind_speed_10m        — kecepatan angin (km/h)
- *     · current.temperature_2m        — suhu (°C)
- *
- * YANG PERLU DIKERJAKAN:
- *   1. Logika Deteksi Kondisi Berbahaya
- *      Tentukan tingkat ancaman berdasarkan nilai cuaca:
- *      - KRITIS (merah)  : precipitation > 10mm  ATAU wind_speed > 60km/h
- *      - WASPADA (kuning): precipitation > 3mm   ATAU humidity > 85%
- *      - AMAN            : tidak ada peringatan → banner tidak tampil
- *
- *   2. State Dismiss
- *      - Gunakan useState untuk menyimpan apakah banner sudah ditutup
- *      - Jika user klik tombol tutup (×) → banner tersembunyi
- *      - Banner muncul kembali jika halaman di-refresh atau lahan diganti
- *
- *   3. Tampilan Banner KRITIS (merah)
- *      - Warna latar: merah (bg-red-50, border-red-300)
- *      - Teks warna: merah (text-red-800)
- *      - Pesan contoh: "Curah hujan ekstrem terdeteksi. Segera amankan
- *        tanaman dan periksa saluran air lahan Anda."
- *
- *   4. Tampilan Banner WASPADA (kuning)
- *      - Warna latar: kuning/amber (bg-amber-50, border-amber-300)
- *      - Teks warna: kuning (text-amber-800)
- *      - Pesan contoh: "Terdapat curah hujan di area lahan Anda.
- *        Pastikan drainase lahan berfungsi dengan baik."
- *
- *   5. Tombol Tutup
- *      - Tampilkan tombol × di sisi kanan banner
- *      - Klik → set dismissed = true → banner hilang
- *
- *   6. Tidak Tampil Jika Aman
- *      - Jika kondisi aman atau current = null → return null
- *      - Jika sudah dismissed → return null
- *
- * HASIL YANG DIHARAPKAN:
- *   Petani langsung diperingatkan jika ada kondisi yang perlu
- *   diantisipasi, dengan pesan yang jelas dan bisa ditutup.
- * ============================================================
- */
 import { useState } from 'react';
 
-// TODO ST-03: Implementasi komponen WeatherAlertBanner
 export default function WeatherAlertBanner({ current }) {
-    // TODO ST-03: Tambahkan state dismissed
-    // const [dismissed, setDismissed] = useState(false)
+    const [dismissed, setDismissed] = useState(false);
 
-    // TODO ST-03: Deteksi level ancaman dari data current
-    // if (!current || dismissed) return null
+    if (!current || dismissed) return null;
 
-    // TODO ST-03: Implementasi tampilan banner di sini
-    return null;
+    const isCritical = current.precipitation > 10 || current.wind_speed_10m > 60;
+    const isWarning  = current.precipitation > 3  || current.relative_humidity_2m > 85;
+
+    if (!isCritical && !isWarning) return null;
+
+    const config = isCritical
+        ? {
+            bg: 'bg-red-50',
+            border: 'border-red-300',
+            titleColor: 'text-red-800',
+            msgColor: 'text-red-700',
+            icon: '🚨',
+            title: 'Peringatan Kritis',
+            message: 'Curah hujan ekstrem terdeteksi. Segera amankan tanaman dan periksa saluran air lahan Anda.',
+        }
+        : {
+            bg: 'bg-amber-50',
+            border: 'border-amber-300',
+            titleColor: 'text-amber-800',
+            msgColor: 'text-amber-700',
+            icon: '⚠️',
+            title: 'Peringatan Cuaca',
+            message: 'Terdapat curah hujan di area lahan Anda. Pastikan drainase lahan berfungsi dengan baik.',
+        };
+
+    return (
+        <div className={`mb-5 p-4 ${config.bg} border ${config.border} rounded-xl flex items-start justify-between gap-3`}>
+            <div className="flex items-start gap-3">
+                <span className="text-xl mt-0.5">{config.icon}</span>
+                <div>
+                    <p className={`text-[13px] font-bold ${config.titleColor}`}>{config.title}</p>
+                    <p className={`text-[12px] ${config.msgColor} mt-0.5`}>{config.message}</p>
+                </div>
+            </div>
+            <button
+                onClick={() => setDismissed(true)}
+                className={`text-[16px] leading-none ${config.titleColor} hover:opacity-60 transition-opacity shrink-0`}
+            >
+                ×
+            </button>
+        </div>
+    );
 }
