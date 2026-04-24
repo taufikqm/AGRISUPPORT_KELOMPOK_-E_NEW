@@ -1,4 +1,31 @@
-import { SERVICE_CARDS } from '@/data/landingData';
+import { SunIcon, ChartIcon, MapIcon, LightBulbIcon } from '@/Components/Landing/LandingIcons';
+
+const SERVICE_CARDS = [
+    {
+        title: 'Prakiraan Cuaca Tepat',
+        desc: 'Data real-time berbasis koordinat untuk merencanakan aktivitas harian.',
+        img: '/images/landing/weather.png',
+        Icon: SunIcon,
+    },
+    {
+        title: 'Insight Historis',
+        desc: 'Analisis tren iklim dan hasil panen untuk evaluasi produktivitas jangka panjang.',
+        img: '/images/landing/insight.png',
+        Icon: ChartIcon,
+    },
+    {
+        title: 'Peta Risiko Lahan',
+        desc: 'Visualisasi area yang rentan terhadap genangan atau kekeringan ekstrem.',
+        img: '/images/landing/risk.png',
+        Icon: MapIcon,
+    },
+    {
+        title: 'Rekomendasi Tindakan',
+        desc: 'Saran praktis berbasis data hibrida untuk menyelamatkan dan meningkatkan panen.',
+        img: '/images/landing/recommendation.png',
+        Icon: LightBulbIcon,
+    },
+];
 
 export default function LayananSection({ featureRef }) {
     return (
