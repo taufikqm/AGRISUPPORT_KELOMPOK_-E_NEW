@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActionLog;
 use App\Models\AgriculturalArea;
 use App\Models\FieldObservation;
-use App\Models\Recommendation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -116,109 +114,6 @@ class FieldObservationController extends Controller
         return Inertia::render('ValidasiObservasi', [
             'observation' => $observation,
         ]);
-    }
-
-    public function showRecommendations(FieldObservation $observation)
-    {
-        abort_if($observation->user_id !== Auth::id(), 403);
-
-        $observation->load('agriculturalArea:id,name,soil_type');
-
-        $riskAnalysis   = $this->calculateRisk($observation);
-        $completedIds   = ActionLog::where('user_id', Auth::id())
-            ->where('observation_id', $observation->id)
-            ->pluck('recommendation_id')
-            ->all();
-
-        $disease  = $riskAnalysis['disease_name'];
-        $location = $observation->agriculturalArea->name;
-        $soilType = $observation->agriculturalArea->soil_type ?? 'umum';
-
-        $scoreByCategory = [
-            'Proteksi Tanaman' => $riskAnalysis['disease_risk']['score'],
-            'Infrastruktur'    => $riskAnalysis['flood_risk']['score'],
-            'Pemupukan'        => $riskAnalysis['drought_risk']['score'],
-            'Pencatatan'       => 0,
-        ];
-
-        $recommendations = Recommendation::all()
-            ->filter(fn($rec) => $rec->category === 'Pencatatan' || ($scoreByCategory[$rec->category] ?? 0) > 40)
-            ->map(function ($rec) use ($disease, $location, $soilType, $scoreByCategory, $completedIds) {
-                $score = $scoreByCategory[$rec->category] ?? 0;
-
-                $urgency = match(true) {
-                    $score > 75 => 'SEGERA',
-                    $score > 40 => 'TINGGI',
-                    default     => $rec->urgency,
-                };
-                $color = match($urgency) {
-                    'SEGERA' => 'red',
-                    'TINGGI' => 'amber',
-                    default  => 'green',
-                };
-
-                $replace = fn(string $text) => str_replace(
-                    ['{{disease}}', '{{location}}', '{{soil_type}}'],
-                    [$disease, $location, $soilType],
-                    $text
-                );
-
-                $details = $rec->details ?? [];
-                $steps   = array_map($replace, $details['steps'] ?? []);
-                $tools   = $details['tools'] ?? [];
-
-                return [
-                    'id'           => $rec->id,
-                    'category'     => $rec->category,
-                    'title'        => $replace($rec->title),
-                    'description'  => $replace($rec->description),
-                    'urgency'      => $urgency,
-                    'color'        => $color,
-                    'steps'        => $steps,
-                    'tools'        => $tools,
-                    'is_completed' => in_array($rec->id, $completedIds),
-                ];
-            })
-            ->sortBy(fn($rec) => match($rec['urgency']) {
-                'SEGERA'    => 0,
-                'TINGGI'    => 1,
-                'TERENCANA' => 2,
-                default     => 3,
-            })
-            ->values()
-            ->all();
-
-        return Inertia::render('RekomendasiTindakan', [
-            'observation'     => $observation,
-            'riskAnalysis'    => $riskAnalysis,
-            'recommendations' => $recommendations,
-        ]);
-    }
-
-    public function markAsCompleted(Request $request)
-    {
-        $validated = $request->validate([
-            'observation_id'    => 'required|exists:field_observations,id',
-            'recommendation_id' => 'required|exists:recommendations,id',
-        ]);
-
-        $observation = FieldObservation::where('id', $validated['observation_id'])
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
-
-        ActionLog::updateOrCreate(
-            [
-                'user_id'           => Auth::id(),
-                'observation_id'    => $observation->id,
-                'recommendation_id' => $validated['recommendation_id'],
-            ],
-            [
-                'action_type'  => 'completion',
-                'performed_at' => now(),
-            ]
-        );
-
-        return response()->json(['status' => 'ok']);
     }
 
 }

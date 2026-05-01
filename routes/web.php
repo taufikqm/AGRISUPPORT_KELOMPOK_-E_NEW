@@ -35,8 +35,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/input-kondisi', [FieldObservationController::class, 'index'])->name('input-kondisi.index');
     Route::post('/input-kondisi', [FieldObservationController::class, 'store'])->name('input-kondisi.store');
     Route::get('/validasi-observasi/{observation}', [FieldObservationController::class, 'showValidation'])->name('validasi-observasi.show');
-    Route::get('/analisis-risiko/{observation}/rekomendasi', [FieldObservationController::class, 'showRecommendations'])->name('rekomendasi-tindakan.show');
-    Route::post('/rekomendasi/mark-completed', [FieldObservationController::class, 'markAsCompleted'])->name('rekomendasi-tindakan.mark-completed');
 
     // Peta Risiko
     Route::get('/peta-risiko', [RiskMapController::class, 'index'])->name('peta-risiko.index');
