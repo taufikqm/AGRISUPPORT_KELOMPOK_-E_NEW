@@ -132,6 +132,8 @@ class FieldObservationController extends Controller
 
     private function calculateRisk(FieldObservation $observation): array
     {
+        $soilType = strtolower($observation->agriculturalArea->soil_type ?? '');
+
         // Skor Kekeringan (0–100) — berdasarkan kelembapan tanah dan data cuaca
         $droughtScore = match($observation->soil_moisture) {
             'Kering'       => 80,
@@ -140,9 +142,10 @@ class FieldObservationController extends Controller
             'Sangat Basah' => 5,
             default        => 40,
         };
+        if (str_contains($soilType, 'regosol'))               $droughtScore += 15; // Regosol lebih rentan kekeringan
         if (($observation->weather_soil_moisture ?? 1) < 0.1) $droughtScore += 20;
         elseif (($observation->weather_soil_moisture ?? 0) > 0.3) $droughtScore -= 20;
-        if (($observation->weather_precip_mm ?? 0) > 10) $droughtScore -= 15;
+        if (($observation->weather_precip_mm ?? 0) > 10)      $droughtScore -= 15;
         $droughtScore = max(0, min(100, $droughtScore));
 
         // Skor Genangan (0–100) — berdasarkan kondisi genangan dan curah hujan
@@ -153,12 +156,13 @@ class FieldObservationController extends Controller
             'Banyak'    => 85,
             default     => 5,
         };
-        if (($observation->weather_precip_mm ?? 0) > 15)    $floodScore += 25;
-        elseif (($observation->weather_precip_mm ?? 0) > 5)  $floodScore += 10;
-        if ($observation->soil_moisture === 'Sangat Basah')  $floodScore += 10;
+        if (str_contains($soilType, 'aluvial'))               $floodScore += 15; // Aluvial lebih rentan genangan
+        if (($observation->weather_precip_mm ?? 0) > 15)      $floodScore += 25;
+        elseif (($observation->weather_precip_mm ?? 0) > 5)   $floodScore += 10;
+        if ($observation->soil_moisture === 'Sangat Basah')    $floodScore += 10;
         $floodScore = max(0, min(100, $floodScore));
 
-        // Skor Penyakit (0–100) — berdasarkan indikasi penyakit di lapangan
+        // Skor Penyakit (0–100) — berdasarkan indikasi penyakit dan kondisi spesifik jenis tanah
         $diseaseScore = match($observation->disease_indication) {
             'Tidak Ada' => 5,
             'Ringan'    => 30,
@@ -166,7 +170,24 @@ class FieldObservationController extends Controller
             'Berat'     => 90,
             default     => 5,
         };
-        $diseaseName  = 'Hama Umum';
+        $diseaseName = 'Hama Umum';
+        $temp        = $observation->weather_temp ?? 0;
+        $humidity    = $observation->weather_humidity ?? 0;
+        $precip      = $observation->weather_precip_mm ?? 0;
+
+        if (str_contains($soilType, 'andosol') && $temp >= 15 && $temp <= 22 && $humidity > 90) {
+            $diseaseScore += 20;
+            $diseaseName   = 'Hawar Daun'; // Andosol dingin+lembap → rentan hawar daun
+        } elseif (str_contains($soilType, 'aluvial') && (in_array($observation->water_puddle, ['Sedang', 'Banyak']) || $precip > 15)) {
+            $diseaseScore += 20;
+            $diseaseName   = 'Blas & Busuk Akar'; // Aluvial basah → rentan blas & busuk akar
+        } elseif (str_contains($soilType, 'podsolik') && $observation->soil_moisture === 'Sangat Basah') {
+            $diseaseScore += 15;
+            $diseaseName   = 'Akar Gada'; // Podsolik sangat basah → rentan akar gada
+        } elseif ((str_contains($soilType, 'latosol') || str_contains($soilType, 'grumusol')) && $observation->soil_moisture === 'Sangat Basah') {
+            $diseaseScore += 15;
+            $diseaseName   = 'Layu Fusarium'; // Latosol/Grumusol sangat basah → rentan layu fusarium
+        }
         $diseaseScore = max(0, min(100, $diseaseScore));
 
         $overallScore = (int) round(($droughtScore + $floodScore + $diseaseScore) / 3);
