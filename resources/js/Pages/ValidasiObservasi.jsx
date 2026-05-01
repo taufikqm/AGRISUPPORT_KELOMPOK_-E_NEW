@@ -88,12 +88,6 @@ export default function ValidasiObservasi({ observation }) {
                     {/* Aksi */}
                     <div className="flex flex-col sm:flex-row gap-3">
                         <Link
-                            href={route('analisis-risiko.show', observation.id)}
-                            className="flex-1 text-center px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                        >
-                            Lanjut ke Analisis Risiko →
-                        </Link>
-                        <Link
                             href={route('input-kondisi.index')}
                             className="flex-1 text-center px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg border border-gray-200 transition-colors"
                         >
