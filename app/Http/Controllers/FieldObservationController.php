@@ -116,4 +116,101 @@ class FieldObservationController extends Controller
         ]);
     }
 
+    // ------------------------------------------------------------------ AGS-23 ST-01
+
+    public function showRiskAnalysis(FieldObservation $observation)
+    {
+        abort_if($observation->user_id !== Auth::id(), 403);
+
+        $observation->load('agriculturalArea:id,name,soil_type');
+
+        return Inertia::render('AnalisisRisiko', [
+            'observation'  => $observation,
+            'riskAnalysis' => $this->calculateRisk($observation),
+        ]);
+    }
+
+    private function calculateRisk(FieldObservation $observation): array
+    {
+        // Skor Kekeringan (0–100) — berdasarkan kelembapan tanah dan data cuaca
+        $droughtScore = match($observation->soil_moisture) {
+            'Kering'       => 80,
+            'Normal'       => 40,
+            'Lembab'       => 20,
+            'Sangat Basah' => 5,
+            default        => 40,
+        };
+        if (($observation->weather_soil_moisture ?? 1) < 0.1) $droughtScore += 20;
+        elseif (($observation->weather_soil_moisture ?? 0) > 0.3) $droughtScore -= 20;
+        if (($observation->weather_precip_mm ?? 0) > 10) $droughtScore -= 15;
+        $droughtScore = max(0, min(100, $droughtScore));
+
+        // Skor Genangan (0–100) — berdasarkan kondisi genangan dan curah hujan
+        $floodScore = match($observation->water_puddle) {
+            'Tidak Ada' => 5,
+            'Sedikit'   => 30,
+            'Sedang'    => 60,
+            'Banyak'    => 85,
+            default     => 5,
+        };
+        if (($observation->weather_precip_mm ?? 0) > 15)    $floodScore += 25;
+        elseif (($observation->weather_precip_mm ?? 0) > 5)  $floodScore += 10;
+        if ($observation->soil_moisture === 'Sangat Basah')  $floodScore += 10;
+        $floodScore = max(0, min(100, $floodScore));
+
+        // Skor Penyakit (0–100) — berdasarkan indikasi penyakit di lapangan
+        $diseaseScore = match($observation->disease_indication) {
+            'Tidak Ada' => 5,
+            'Ringan'    => 30,
+            'Sedang'    => 60,
+            'Berat'     => 90,
+            default     => 5,
+        };
+        $diseaseName  = 'Hama Umum';
+        $diseaseScore = max(0, min(100, $diseaseScore));
+
+        $overallScore = (int) round(($droughtScore + $floodScore + $diseaseScore) / 3);
+        $levelLabel   = fn(int $s) => match(true) {
+            $s >= 75 => 'Kritis',
+            $s >= 50 => 'Tinggi',
+            $s >= 25 => 'Sedang',
+            default  => 'Rendah',
+        };
+
+        return [
+            'drought_risk' => [
+                'score'       => $droughtScore,
+                'level'       => $levelLabel($droughtScore),
+                'description' => 'Risiko kekurangan air pada lahan',
+            ],
+            'flood_risk' => [
+                'score'       => $floodScore,
+                'level'       => $levelLabel($floodScore),
+                'description' => 'Risiko genangan atau banjir pada lahan',
+            ],
+            'disease_risk' => [
+                'score'       => $diseaseScore,
+                'level'       => $levelLabel($diseaseScore),
+                'description' => 'Risiko serangan penyakit tanaman',
+            ],
+            'overall_risk_score' => $overallScore,
+            'overall_risk_level' => $levelLabel($overallScore),
+            'analysis_summary'   => $this->buildSummary($droughtScore, $floodScore, $diseaseScore, $observation->agriculturalArea->name),
+            'disease_name'       => $diseaseName,
+        ];
+    }
+
+    private function buildSummary(int $drought, int $flood, int $disease, string $areaName): string
+    {
+        $parts = [];
+        if ($drought >= 50) $parts[] = 'risiko kekeringan yang perlu diwaspadai';
+        if ($flood   >= 50) $parts[] = 'potensi genangan air yang cukup tinggi';
+        if ($disease >= 50) $parts[] = 'indikasi serangan penyakit tanaman';
+
+        if (empty($parts)) {
+            return "Kondisi lahan {$areaName} secara umum baik. Tetap lakukan pemantauan rutin untuk menjaga produktivitas.";
+        }
+
+        return 'Lahan ' . $areaName . ' menunjukkan ' . implode(', ', $parts) . '. Segera tinjau rekomendasi tindakan untuk penanganan yang tepat.';
+    }
 }
