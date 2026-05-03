@@ -41,7 +41,8 @@ export default function WeatherAlertBanner({ current }) {
     const dismiss = (key) => setDismissedTypes(prev => [...prev, key]);
 
     // Mode 1: pre-computed alerts from shared Inertia props (Dashboard, Layout)
-    const activeSharedAlerts = sharedAlerts.filter(
+    // Skip shared alerts when current is provided — layout already shows them
+    const activeSharedAlerts = current ? [] : sharedAlerts.filter(
         (a) => !dismissedTypes.includes(`${a.area_name}-${a.type}`)
     );
 
