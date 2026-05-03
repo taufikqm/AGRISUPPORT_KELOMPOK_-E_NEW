@@ -14,6 +14,143 @@ use Inertia\Inertia;
 
 class FieldObservationController extends Controller
 {
+    // ------------------------------------------------------------------ AGS-2 Dashboard
+
+    public function dashboard(Request $request)
+    {
+        $userId  = Auth::id();
+        $areas   = AgriculturalArea::where('user_id', $userId)->get(['id', 'name']);
+        $areaId  = $request->query('area_id');
+
+        $obsQuery = FieldObservation::where('user_id', $userId)
+            ->with('agriculturalArea:id,name,soil_type')
+            ->latest('observation_date');
+
+        if ($areaId && $areas->contains('id', (int) $areaId)) {
+            $obsQuery->where('agricultural_area_id', $areaId);
+        }
+
+        $latestObs = $obsQuery->first();
+
+        $weather         = null;
+        $riskAlerts      = [];
+        $recommendations = collect();
+
+        if ($latestObs) {
+            $metrics = $this->calculateRiskMetrics($latestObs);
+
+            // Coba fetch cuaca live dari Open-Meteo via centroid lahan
+            $liveTemp = $latestObs->weather_temp;
+            $liveCond = $latestObs->weather_condition;
+            $liveHum  = $latestObs->weather_humidity;
+            $liveWind = $latestObs->weather_wind_kph;
+
+            if ($liveTemp === null && $latestObs->agriculturalArea) {
+                $centroid = DB::selectOne(
+                    'SELECT ST_Y(ST_Centroid(geometry::geometry)) AS lat,
+                            ST_X(ST_Centroid(geometry::geometry)) AS lon
+                     FROM agricultural_areas WHERE id = ?',
+                    [$latestObs->agriculturalArea->id]
+                );
+
+                if ($centroid && $centroid->lat && $centroid->lon) {
+                    try {
+                        $resp = Http::timeout(5)->get('https://api.open-meteo.com/v1/forecast', [
+                            'latitude'  => $centroid->lat,
+                            'longitude' => $centroid->lon,
+                            'current'   => 'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
+                            'timezone'  => 'Asia/Jakarta',
+                        ]);
+                        if ($resp->successful()) {
+                            $cur      = $resp->json('current', []);
+                            $liveTemp = $cur['temperature_2m'] ?? null;
+                            $liveCond = isset($cur['weather_code']) ? (string) $cur['weather_code'] : null;
+                            $liveHum  = $cur['relative_humidity_2m'] ?? null;
+                            $liveWind = $cur['wind_speed_10m'] ?? null;
+                        }
+                    } catch (\Exception $e) {
+                        // Biarkan null jika gagal
+                    }
+                }
+            }
+
+            $weather = [
+                'temp'      => $liveTemp,
+                'condition' => $this->mapWeatherCode($liveCond),
+                'humidity'  => $liveHum,
+                'wind'      => $liveWind,
+                'area_name' => $latestObs->agriculturalArea->name ?? 'Lahan',
+            ];
+
+            $riskItems = [
+                ['name' => $metrics['relevant_disease'], 'key' => 'disease', 'score' => $metrics['disease'], 'desc' => $metrics['disease_advice']],
+                ['name' => 'Risiko Genangan',            'key' => 'puddle',  'score' => $metrics['puddle'],  'desc' => 'Potensi genangan air terdeteksi pada area lahan.'],
+                ['name' => 'Risiko Kekeringan',          'key' => 'drought', 'score' => $metrics['drought'], 'desc' => 'Kelembapan tanah rendah, perlu perhatian irigasi.'],
+            ];
+            usort($riskItems, fn($a, $b) => $b['score'] - $a['score']);
+
+            foreach (array_slice($riskItems, 0, 2) as $risk) {
+                $riskAlerts[] = [
+                    'name'      => $risk['name'],
+                    'score'     => $risk['score'],
+                    'level'     => $risk['score'] > 70 ? 'Bahaya / Tinggi' : ($risk['score'] > 40 ? 'Waspada / Sedang' : 'Aman / Rendah'),
+                    'status'    => $risk['score'] > 70 ? 'danger' : ($risk['score'] > 40 ? 'warning' : 'safe'),
+                    'desc'      => $risk['desc'],
+                    'area_name' => $latestObs->agriculturalArea->name ?? 'Lahan',
+                ];
+            }
+
+            $completedIds = ActionLog::where('user_id', $userId)
+                ->where('observation_id', $latestObs->id)
+                ->pluck('recommendation_id')->toArray();
+
+            $recommendations = $this->prepareRecommendations($latestObs, $metrics)
+                ->take(4)
+                ->map(fn($r) => [
+                    'id'           => $r->id,
+                    'title'        => $r->title,
+                    'category'     => $r->category,
+                    'urgency'      => $r->urgency ?? 'TERENCANA',
+                    'color'        => $r->color ?? 'green',
+                    'is_completed' => in_array($r->id, $completedIds),
+                ])->values();
+        }
+
+        $recentActivity = ActionLog::where('user_id', $userId)
+            ->with(['recommendation:id,title,category', 'observation.agriculturalArea:id,name'])
+            ->latest('performed_at')
+            ->take(5)
+            ->get()
+            ->map(fn($log) => [
+                'title'     => $log->recommendation->title ?? 'Tindakan',
+                'area_name' => optional($log->observation->agriculturalArea)->name ?? 'Lahan',
+                'date'      => \Carbon\Carbon::parse($log->performed_at)->format('d M Y'),
+                'category'  => $log->recommendation->category ?? '',
+            ]);
+
+        return Inertia::render('Dashboard', [
+            'weather'             => $weather,
+            'riskAlerts'          => $riskAlerts,
+            'recommendations'     => $recommendations,
+            'recentActivity'      => $recentActivity,
+            'latestObservationId' => $latestObs?->id,
+            'areas'               => $areas,
+            'selectedAreaId'      => $areaId ? (int) $areaId : null,
+        ]);
+    }
+
+    private function mapWeatherCode(?string $code): string
+    {
+        if ($code === null) return 'Tidak Diketahui';
+        $c = (int) $code;
+        if ($c === 0)  return 'Cerah';
+        if ($c <= 3)   return 'Berawan';
+        if ($c <= 48)  return 'Berkabut';
+        if ($c <= 67)  return 'Hujan Ringan';
+        if ($c <= 82)  return 'Hujan';
+        return 'Badai';
+    }
+
     // ------------------------------------------------------------------ ST-01
 
     public function index()
