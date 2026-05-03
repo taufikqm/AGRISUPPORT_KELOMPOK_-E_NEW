@@ -232,6 +232,38 @@ class FieldObservationController extends Controller
         ];
     }
 
+    // ------------------------------------------------------------------ AGS-24 ST-04 (index)
+
+    public function indexRecommendations()
+    {
+        $observations = FieldObservation::where('user_id', Auth::id())
+            ->with('agriculturalArea:id,name,soil_type')
+            ->orderByDesc('observation_date')
+            ->take(30)
+            ->get();
+
+        $items = $observations->map(function ($obs) {
+            $metrics     = $this->calculateRiskMetrics($obs);
+            $recs        = $this->prepareRecommendations($obs, $metrics);
+            $completed   = ActionLog::where('user_id', Auth::id())
+                ->where('observation_id', $obs->id)
+                ->count();
+
+            return [
+                'id'             => $obs->id,
+                'date'           => $obs->observation_date,
+                'area_name'      => $obs->agriculturalArea->name ?? 'Lahan',
+                'overall_risk'   => $metrics['overall'],
+                'total_recs'     => $recs->count(),
+                'completed_count'=> $completed,
+            ];
+        });
+
+        return Inertia::render('RekomendasiIndex', [
+            'items' => $items,
+        ]);
+    }
+
     // ------------------------------------------------------------------ AGS-24 ST-01
 
     public function showRecommendations(FieldObservation $observation)

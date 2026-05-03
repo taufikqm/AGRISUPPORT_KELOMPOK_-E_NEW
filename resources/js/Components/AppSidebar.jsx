@@ -9,7 +9,7 @@ const menuItems = [
     { name: 'Input Kondisi',    icon: InputKondisiIcon, route: 'input-kondisi.index' },
     { name: 'Riwayat Lahan',    icon: RiwayatIcon,      route: 'riwayat-lahan.index' },
     { name: 'Insight Historis', icon: InsightIcon,       route: 'insight-historis.index' },
-    { name: 'Rekomendasi',      icon: RekomendasiIcon,  route: null },
+    { name: 'Rekomendasi',      icon: RekomendasiIcon,  route: 'rekomendasi-tindakan.index' },
 ];
 
 function DashboardIcon({ className }) {
