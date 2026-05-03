@@ -215,12 +215,15 @@ export default function AnalisisRisiko({ observation, risk_metrics }) {
                         Sistem telah merumuskan langkah konkret yang harus Anda ambil sekarang.
                     </p>
 
-                    <span className="w-full sm:w-auto inline-flex items-center justify-center gap-4 bg-white/30 text-white/60 px-10 py-5 rounded-2xl text-[18px] md:text-[20px] font-black cursor-not-allowed relative z-10">
-                        Rekomendasi Tindakan (Segera Hadir)
+                    <Link
+                        href={route('rekomendasi-tindakan.show', observation.id)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-4 bg-white text-[#3D5A3D] px-10 py-5 rounded-2xl text-[18px] md:text-[20px] font-black hover:bg-white/90 active:scale-95 transition-all shadow-lg relative z-10"
+                    >
+                        Lihat Rekomendasi Tindakan
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                         </svg>
-                    </span>
+                    </Link>
                 </div>
             </div>
         </AuthenticatedLayout>

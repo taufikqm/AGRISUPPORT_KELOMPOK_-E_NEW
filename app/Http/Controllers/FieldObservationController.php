@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActionLog;
 use App\Models\AgriculturalArea;
 use App\Models\FieldObservation;
+use App\Models\Recommendation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -228,5 +230,110 @@ class FieldObservationController extends Controller
             'relevant_disease' => $relevantDisease,
             'disease_advice'   => $diseaseAdvice,
         ];
+    }
+
+    // ------------------------------------------------------------------ AGS-24 ST-01
+
+    public function showRecommendations(FieldObservation $observation)
+    {
+        if ($observation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $metrics         = $this->calculateRiskMetrics($observation);
+        $recommendations = $this->prepareRecommendations($observation, $metrics);
+
+        $completedIds = ActionLog::where('user_id', Auth::id())
+            ->where('observation_id', $observation->id)
+            ->pluck('recommendation_id')
+            ->toArray();
+
+        return Inertia::render('RekomendasiTindakan', [
+            'observation'     => $observation->load('agriculturalArea'),
+            'metrics'         => $metrics,
+            'recommendations' => $recommendations,
+            'completedIds'    => $completedIds,
+        ]);
+    }
+
+    // ------------------------------------------------------------------ AGS-24 ST-02
+
+    public function markAsCompleted(Request $request)
+    {
+        $validated = $request->validate([
+            'observation_id'    => 'required|exists:field_observations,id',
+            'recommendation_id' => 'required|exists:recommendations,id',
+        ]);
+
+        $log = ActionLog::updateOrCreate([
+            'user_id'           => Auth::id(),
+            'observation_id'    => $validated['observation_id'],
+            'recommendation_id' => $validated['recommendation_id'],
+        ], [
+            'action_type'  => 'completion',
+            'performed_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tindakan berhasil dicatat sebagai selesai.',
+            'log'     => $log,
+        ]);
+    }
+
+    private function prepareRecommendations(FieldObservation $observation, array $metrics): \Illuminate\Support\Collection
+    {
+        $area      = $observation->agriculturalArea;
+        $templates = Recommendation::all();
+        $filtered  = collect();
+
+        foreach ($templates as $template) {
+            $shouldInclude = false;
+            $sortPriority  = 0;
+
+            switch ($template->category) {
+                case 'Proteksi Tanaman':
+                    if ($metrics['disease'] > 40) { $shouldInclude = true; $sortPriority = $metrics['disease']; }
+                    break;
+                case 'Infrastruktur':
+                    if ($metrics['puddle'] > 40)  { $shouldInclude = true; $sortPriority = $metrics['puddle']; }
+                    break;
+                case 'Pemupukan':
+                    if ($metrics['drought'] > 40) { $shouldInclude = true; $sortPriority = $metrics['drought']; }
+                    break;
+                case 'Pencatatan':
+                    $shouldInclude = true;
+                    $sortPriority  = 10;
+                    break;
+            }
+
+            if ($shouldInclude) {
+                $placeholders = [
+                    '{{disease}}'   => $metrics['relevant_disease'],
+                    '{{soil_type}}' => $metrics['soil_type'],
+                    '{{advice}}'    => $metrics['disease_advice'],
+                    '{{location}}'  => $area->location_name ?? 'Lahan Anda',
+                ];
+
+                $template->title       = str_replace(array_keys($placeholders), array_values($placeholders), $template->title);
+                $template->description = str_replace(array_keys($placeholders), array_values($placeholders), $template->description);
+
+                $details = $template->details;
+                if (isset($details['steps'])) {
+                    foreach ($details['steps'] as &$step) {
+                        $step = str_replace(array_keys($placeholders), array_values($placeholders), $step);
+                    }
+                }
+                $template->details       = $details;
+                $template->sort_priority = $sortPriority;
+
+                if ($sortPriority > 75)      { $template->urgency = 'SEGERA'; $template->color = 'red'; }
+                elseif ($sortPriority > 40)  { $template->urgency = 'TINGGI'; $template->color = 'amber'; }
+
+                $filtered->push($template);
+            }
+        }
+
+        return $filtered->sortByDesc('sort_priority')->values();
     }
 }
