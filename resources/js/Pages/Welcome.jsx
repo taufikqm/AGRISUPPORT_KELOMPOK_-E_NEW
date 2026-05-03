@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
 
 import { MODULE_CARDS } from '@/data/landingData';
-import { SunIcon, ChartIcon, MapIcon, LightBulbIcon } from '@/Components/Landing/LandingIcons';
 import LandingNavbar    from '@/Components/Landing/LandingNavbar';
 import HeroSection      from '@/Components/Landing/HeroSection';
 import AboutSection     from '@/Components/Landing/AboutSection';
@@ -10,10 +9,6 @@ import LayananSection   from '@/Components/Landing/LayananSection';
 import ModulSection     from '@/Components/Landing/ModulSection';
 import TestimoniSection from '@/Components/Landing/TestimoniSection';
 import LandingFooter    from '@/Components/Landing/LandingFooter';
-
-// Inject Icon references into SERVICE_CARDS (cannot be stored in plain .js file)
-import { SERVICE_CARDS as BASE_SERVICE_CARDS } from '@/data/landingData';
-const ICON_MAP = { SunIcon, ChartIcon, MapIcon, LightBulbIcon };
 
 export default function Welcome({ auth, canLogin, canRegister }) {
     const [scrolled, setScrolled]       = useState(false);
