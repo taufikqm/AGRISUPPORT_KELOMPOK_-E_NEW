@@ -74,9 +74,35 @@ class HandleInertiaRequests extends Middleware
                 'area_name' => $area,
                 'level'     => $level,
                 'type'      => $type,
+                'message'   => $this->getAlertMessage($type, $area),
+                'action'    => $this->getAlertAction($type),
             ];
         }
 
         return $alerts;
+    }
+
+    private function getAlertMessage(string $type, string $area): string
+    {
+        return match($type) {
+            'hujan_lebat'       => "Curah hujan ekstrem terdeteksi di {$area}. Risiko banjir dan kerusakan tanaman sangat tinggi.",
+            'angin_kencang'     => "Kecepatan angin berbahaya terdeteksi di {$area}. Tanaman rentan roboh dan patah.",
+            'hujan_ringan'      => "Hujan terdeteksi di {$area}. Pastikan drainase lahan berfungsi dengan baik.",
+            'suhu_tinggi'       => "Suhu ekstrem terdeteksi di {$area}. Tanaman berisiko mengalami stres panas dan kekeringan.",
+            'kelembapan_tinggi' => "Kelembapan sangat tinggi di {$area}. Waspadai perkembangan penyakit jamur pada tanaman.",
+            default             => "Kondisi cuaca tidak normal terdeteksi di {$area}.",
+        };
+    }
+
+    private function getAlertAction(string $type): string
+    {
+        return match($type) {
+            'hujan_lebat'       => 'Segera periksa saluran drainase dan amankan tanaman dari risiko genangan.',
+            'angin_kencang'     => 'Pasang penyangga tanaman dan hindari aktivitas di lahan terbuka.',
+            'hujan_ringan'      => 'Kurangi irigasi sementara dan pantau kondisi tanah.',
+            'suhu_tinggi'       => 'Tingkatkan frekuensi irigasi dan berikan naungan jika memungkinkan.',
+            'kelembapan_tinggi' => 'Lakukan pemangkasan untuk sirkulasi udara dan pantau gejala penyakit.',
+            default             => 'Pantau kondisi lahan secara berkala.',
+        };
     }
 }
