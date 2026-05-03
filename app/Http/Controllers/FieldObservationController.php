@@ -256,6 +256,31 @@ class FieldObservationController extends Controller
         ]);
     }
 
+    // ------------------------------------------------------------------ AGS-24 ST-02
+
+    public function markAsCompleted(Request $request)
+    {
+        $validated = $request->validate([
+            'observation_id'    => 'required|exists:field_observations,id',
+            'recommendation_id' => 'required|exists:recommendations,id',
+        ]);
+
+        $log = ActionLog::updateOrCreate([
+            'user_id'           => Auth::id(),
+            'observation_id'    => $validated['observation_id'],
+            'recommendation_id' => $validated['recommendation_id'],
+        ], [
+            'action_type'  => 'completion',
+            'performed_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tindakan berhasil dicatat sebagai selesai.',
+            'log'     => $log,
+        ]);
+    }
+
     private function prepareRecommendations(FieldObservation $observation, array $metrics): \Illuminate\Support\Collection
     {
         $area      = $observation->agriculturalArea;
