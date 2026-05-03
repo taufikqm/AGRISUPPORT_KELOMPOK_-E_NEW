@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useForm } from '@inertiajs/react';
 import WilayahFormFields from './WilayahFormFields';
+import 'leaflet/dist/leaflet.css';
+import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
 export default function TambahWilayahModal({ isOpen, onClose }) {
     const { data, setData, post, processing, errors, reset } = useForm({
