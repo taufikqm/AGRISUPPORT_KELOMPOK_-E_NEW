@@ -94,12 +94,9 @@ export default function AnalisisRisiko({ observation, riskAnalysis }) {
                     </div>
 
                     {/* Aksi */}
-                    <Link
-                        href={route('rekomendasi-tindakan.show', observation.id)}
-                        className="block w-full text-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors"
-                    >
-                        Lihat Rekomendasi Tindakan →
-                    </Link>
+                    <span className="block w-full text-center px-6 py-3 bg-gray-300 text-gray-500 text-sm font-semibold rounded-xl cursor-not-allowed">
+                        Rekomendasi Tindakan (Segera Hadir)
+                    </span>
 
                 </div>
             </div>
