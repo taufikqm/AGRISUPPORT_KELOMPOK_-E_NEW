@@ -133,15 +133,9 @@ export default function AppSidebar({ currentRoute, isOpen, onClose, isCollapsed,
                 {/* Menu */}
                 <nav className="flex-1 px-3 space-y-1 overflow-y-auto mt-4">
                     {menuItems.map((item) => {
-                        const latestObsId = auth.latest_observation_id;
                         let href = item.route ? route(item.route) : '#';
-                        
-                        if (item.name === 'Rekomendasi' && latestObsId) {
-                            href = route('rekomendasi-tindakan.show', latestObsId);
-                        }
 
-                        const isActive = (item.route && route().current(item.route)) || 
-                                         (item.name === 'Rekomendasi' && route().current('rekomendasi-tindakan.show'));
+                        const isActive = item.route ? route().current(item.route) : false;
                         const Icon = item.icon;
                         return (
                             <Link
