@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import WeatherAlertBanner from '@/Components/Weather/WeatherAlertBanner';
 import { WiDaySunny, WiCloudy, WiRain, WiSprinkle, WiThunderstorm, WiFog } from 'react-icons/wi';
 
 function WeatherIcon({ condition }) {
@@ -312,6 +313,9 @@ export default function Dashboard({ auth, weather, riskAlerts, recommendations, 
                         <div className="w-10 h-10 rounded-full border-4 border-[#3D5A3D]/20 border-t-[#3D5A3D] animate-spin" />
                     </div>
                 )}
+
+                {/* Weather alerts hanya untuk lahan yang sedang dipilih */}
+                <WeatherAlertBanner areaId={selectedAreaId} />
 
                 {/* Row 1: Cuaca + 2 Risk Alert */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

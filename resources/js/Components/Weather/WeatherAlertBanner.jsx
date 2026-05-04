@@ -34,16 +34,16 @@ function SingleAlert({ alert, onDismiss }) {
     );
 }
 
-export default function WeatherAlertBanner({ current }) {
+export default function WeatherAlertBanner({ current, areaId }) {
     const { weatherAlerts: sharedAlerts = [] } = usePage().props;
     const [dismissedTypes, setDismissedTypes] = useState([]);
 
     const dismiss = (key) => setDismissedTypes(prev => [...prev, key]);
 
-    // Mode 1: pre-computed alerts from shared Inertia props (Dashboard, Layout)
-    const activeSharedAlerts = sharedAlerts.filter(
-        (a) => !dismissedTypes.includes(`${a.area_name}-${a.type}`)
-    );
+    // Mode 1: pre-computed alerts — hanya tampil jika areaId cocok dengan lahan yang dipilih
+    const activeSharedAlerts = current ? [] : sharedAlerts
+        .filter((a) => areaId == null || String(a.area_id) === String(areaId))
+        .filter((a) => !dismissedTypes.includes(`${a.area_name}-${a.type}`));
 
     // Mode 2: real-time current data from CuacaPrediksi API call
     let realtimeAlerts = [];

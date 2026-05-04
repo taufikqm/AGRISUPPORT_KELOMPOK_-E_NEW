@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import AppSidebar from '@/Components/AppSidebar';
 import AppHeader from '@/Components/AppHeader';
-import WeatherAlertBanner from '@/Components/Weather/WeatherAlertBanner';
 
 export default function AuthenticatedLayout({ children, title, badge, currentRoute, headerActions }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -30,9 +29,6 @@ export default function AuthenticatedLayout({ children, title, badge, currentRou
                 />
 
                 <main className="flex-1 overflow-y-auto w-full">
-                    <div className="max-w-6xl mx-auto px-4 md:px-8 pt-4">
-                        <WeatherAlertBanner />
-                    </div>
                     {children}
                 </main>
             </div>
