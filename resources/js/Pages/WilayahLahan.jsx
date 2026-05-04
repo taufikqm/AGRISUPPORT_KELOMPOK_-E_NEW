@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useState } from 'react';
 import LahanCard from '@/Components/WilayahLahan/LahanCard';
@@ -14,12 +14,24 @@ export default function WilayahLahan({ auth, areas = [] }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteProcessing, setDeleteProcessing] = useState(false);
 
-    // Sync selected area if areas prop changes (e.g., after update/delete)
     const handleModalClose = () => {
         setIsAddModalOpen(false);
         setIsEditModalOpen(false);
         setIsDeleteModalOpen(false);
+    };
+
+    const handleDelete = () => {
+        if (!selectedArea) return;
+        setDeleteProcessing(true);
+        router.delete(route('wilayah-lahan.destroy', selectedArea.id), {
+            onSuccess: () => {
+                handleModalClose();
+                setSelectedArea(null);
+            },
+            onFinish: () => setDeleteProcessing(false),
+        });
     };
 
     return (
@@ -137,13 +149,12 @@ export default function WilayahLahan({ auth, areas = [] }) {
                         onClose={handleModalClose} 
                         area={selectedArea}
                     />
-                    <HapusWilayahModal 
-                        isOpen={isDeleteModalOpen} 
-                        onClose={() => {
-                            handleModalClose();
-                            setSelectedArea(null); // Clear selection after delete
-                        }} 
+                    <HapusWilayahModal
+                        isOpen={isDeleteModalOpen}
+                        onClose={handleModalClose}
+                        onConfirm={handleDelete}
                         area={selectedArea}
+                        processing={deleteProcessing}
                     />
                 </>
             )}
