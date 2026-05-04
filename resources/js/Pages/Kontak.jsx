@@ -54,7 +54,7 @@ export default function Kontak() {
                     </p>
 
                     {/* Contact Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <ContactCard
                             icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>}
                             title="Email"
@@ -79,29 +79,6 @@ export default function Kontak() {
                         />
                     </div>
 
-                    {/* Tim Section */}
-                    <div className="border border-white/20 rounded-2xl p-6">
-                        <h2 className="text-[18px] font-bold text-white mb-5">Tim Pengembang — Kelompok E</h2>
-                        <div className="space-y-3">
-                            {[
-                                { name: 'Taufik Qurohman',  role: 'Project Manager & Backend Developer' },
-                                { name: 'Arjuna Yadi',      role: 'Backend Developer' },
-                                { name: 'Ketrin Fransiska', role: 'Frontend Developer' },
-                                { name: 'Dimas',            role: 'Frontend Developer' },
-                                { name: 'Bintang',          role: 'UI/UX Designer' },
-                            ].map((member) => (
-                                <div key={member.name} className="flex items-center gap-4 py-3 border-b border-white/10 last:border-0">
-                                    <div className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center shrink-0">
-                                        <span className="text-[13px] font-bold text-[#00d492]">{member.name.charAt(0)}</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-[14px] font-bold text-white">{member.name}</p>
-                                        <p className="text-[12px] text-white/50">{member.role}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </main>
 
