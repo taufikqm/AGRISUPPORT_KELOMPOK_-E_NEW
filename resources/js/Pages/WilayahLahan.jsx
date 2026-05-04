@@ -9,11 +9,23 @@ import HapusWilayahModal from '@/Components/WilayahLahan/HapusWilayahModal';
 
 export default function WilayahLahan({ auth, areas = [] }) {
     const [selectedArea, setSelectedArea] = useState(areas.length > 0 ? areas[0] : null);
-    
+    const [searchQuery, setSearchQuery] = useState('');
+
     // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+    const filteredAreas = areas.filter(area => {
+        const q = searchQuery.toLowerCase().trim();
+        if (!q) return true;
+        return (
+            area.name?.toLowerCase().includes(q) ||
+            area.location_name?.toLowerCase().includes(q) ||
+            area.soil_type?.toLowerCase().includes(q) ||
+            String(area.id).includes(q)
+        );
+    });
 
     // Sync selected area if areas prop changes (e.g., after update/delete)
     const handleModalClose = () => {
@@ -81,22 +93,34 @@ export default function WilayahLahan({ auth, areas = [] }) {
                                         <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                                         </svg>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Cari nama wilayah..." 
+                                        <input
+                                            type="text"
+                                            placeholder="Cari nama wilayah..."
                                             className="w-full pl-10 pr-4 py-2 border-gray-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
                                         />
                                     </div>
                                 </div>
                                 <div className="p-4 overflow-y-auto flex-1 space-y-3">
-                                    {areas.map(area => (
-                                        <LahanCard 
-                                            key={area.id} 
-                                            area={area} 
-                                            isSelected={selectedArea?.id === area.id}
-                                            onClick={() => setSelectedArea(area)}
-                                        />
-                                    ))}
+                                    {filteredAreas.length === 0 && searchQuery.trim() ? (
+                                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                                            <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                            </svg>
+                                            <p className="text-sm text-gray-400 font-medium">Lahan tidak ditemukan</p>
+                                            <p className="text-xs text-gray-300 mt-1">Coba kata kunci lain</p>
+                                        </div>
+                                    ) : (
+                                        filteredAreas.map(area => (
+                                            <LahanCard
+                                                key={area.id}
+                                                area={area}
+                                                isSelected={selectedArea?.id === area.id}
+                                                onClick={() => setSelectedArea(area)}
+                                            />
+                                        ))
+                                    )}
                                 </div>
                             </div>
 
