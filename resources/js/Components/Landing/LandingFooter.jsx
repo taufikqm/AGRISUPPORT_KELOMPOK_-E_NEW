@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+
 export default function LandingFooter() {
     return (
         <footer className="bg-white border-t border-[#e2e8f0] py-12">
@@ -9,15 +11,24 @@ export default function LandingFooter() {
                     Sistem Pendukung Keputusan Cerdas Pertanian
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-8">
-                    <a href="#" className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors">
+                    <Link
+                        href={route('kebijakan-privasi')}
+                        className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors"
+                    >
                         Kebijakan Privasi
-                    </a>
-                    <a href="#" className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors">
+                    </Link>
+                    <Link
+                        href={route('syarat-ketentuan')}
+                        className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors"
+                    >
                         Syarat & Ketentuan
-                    </a>
-                    <a href="#" className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors">
+                    </Link>
+                    <Link
+                        href={route('kontak')}
+                        className="text-[14px] md:text-[16px] font-semibold text-[#90a1b9] hover:text-[#007a55] transition-colors"
+                    >
                         Kontak
-                    </a>
+                    </Link>
                 </div>
                 <p className="text-[14px] font-medium text-[#90a1b9]">
                     © 2026 AgriSupport. Hak Cipta Dilindungi.
