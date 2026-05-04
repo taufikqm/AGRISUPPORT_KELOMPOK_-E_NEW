@@ -80,6 +80,7 @@ class HandleInertiaRequests extends Middleware
             }
 
             $alerts[] = [
+                'area_id'   => $obs->agricultural_area_id,
                 'area_name' => $area,
                 'level'     => $level,
                 'type'      => $type,
