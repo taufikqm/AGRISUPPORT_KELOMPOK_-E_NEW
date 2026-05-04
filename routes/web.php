@@ -15,6 +15,9 @@ use Inertia\Inertia;
 use App\Http\Controllers\LandingController;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+Route::get('/kebijakan-privasi', [LandingController::class, 'kebijakanPrivasi'])->name('kebijakan-privasi');
+Route::get('/syarat-ketentuan', [LandingController::class, 'syaratKetentuan'])->name('syarat-ketentuan');
+Route::get('/kontak', [LandingController::class, 'kontak'])->name('kontak');
 
 Route::get('/dashboard', [FieldObservationController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 

@@ -23,4 +23,19 @@ class LandingController extends Controller
             'phpVersion' => PHP_VERSION,
         ]);
     }
+
+    public function kebijakanPrivasi()
+    {
+        return Inertia::render('KebijanPrivasi');
+    }
+
+    public function syaratKetentuan()
+    {
+        return Inertia::render('SyaratKetentuan');
+    }
+
+    public function kontak()
+    {
+        return Inertia::render('Kontak');
+    }
 }
