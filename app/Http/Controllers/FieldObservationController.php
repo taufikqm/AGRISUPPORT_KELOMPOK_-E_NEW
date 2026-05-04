@@ -8,6 +8,7 @@ use App\Models\FieldObservation;
 use App\Models\Recommendation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
@@ -126,7 +127,7 @@ class FieldObservationController extends Controller
                 'area_name' => optional($log->observation->agriculturalArea)->name ?? 'Lahan',
                 'date'      => \Carbon\Carbon::parse($log->performed_at)->format('d M Y'),
                 'category'  => $log->recommendation->category ?? '',
-            ]);
+            ]); 
 
         return Inertia::render('Dashboard', [
             'weather'             => $weather,
@@ -235,9 +236,13 @@ class FieldObservationController extends Controller
             // Cuaca gagal diambil — observasi tersimpan dengan data cuaca kosong
         }
 
+        $userId = Auth::id();
         $observation = FieldObservation::create(array_merge($validated, $weatherData, [
-            'user_id' => Auth::id(),
+            'user_id' => $userId,
         ]));
+
+        Cache::forget("weather_alerts_{$userId}");
+        Cache::forget("latest_obs_{$userId}");
 
         return redirect()->route('validasi-observasi.show', $observation);
     }

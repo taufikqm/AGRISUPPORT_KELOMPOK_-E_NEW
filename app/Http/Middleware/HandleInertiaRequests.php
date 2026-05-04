@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -33,9 +34,17 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
-                'latest_observation_id' => $request->user() ? \App\Models\FieldObservation::where('user_id', $request->user()->id)->latest()->value('id') : null,
+                'latest_observation_id' => $request->user()
+                    ? Cache::remember("latest_obs_{$request->user()->id}", 60, fn() =>
+                        \App\Models\FieldObservation::where('user_id', $request->user()->id)->latest()->value('id')
+                    )
+                    : null,
             ],
-            'weatherAlerts' => $request->user() ? $this->detectWeatherAlerts($request->user()->id) : [],
+            'weatherAlerts' => $request->user()
+                ? Cache::remember("weather_alerts_{$request->user()->id}", 300, fn() =>
+                    $this->detectWeatherAlerts($request->user()->id)
+                )
+                : [],
         ];
     }
 
@@ -46,7 +55,7 @@ class HandleInertiaRequests extends Middleware
             ->with('agriculturalArea:id,name')
             ->latest('observation_date')
             ->get()
-            ->unique('agricultural_area_id')
+            ->uniqueStrict('agricultural_area_id')
             ->take(5);
 
         $alerts = [];
