@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,8 +19,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureIsAdmin::class,
+        ]);
+
         $middleware->redirectGuestsTo(fn () => route('login'));
-        $middleware->redirectUsersTo(fn () => route('wilayah-lahan.index'));
+        $middleware->redirectUsersTo(function (Request $request) {
+            return $request->user()?->role === 'admin'
+                ? route('admin.dashboard')
+                : route('wilayah-lahan.index');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

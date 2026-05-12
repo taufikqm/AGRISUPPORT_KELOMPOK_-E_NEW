@@ -4,21 +4,34 @@ use App\Http\Controllers\AgriculturalAreaController;
 use App\Http\Controllers\FieldObservationController;
 use App\Http\Controllers\HistoricalInsightController;
 use App\Http\Controllers\LandHistoryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\RiskMapController;
 use App\Http\Controllers\PlantingTimeController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\LandManagementController;
+use App\Http\Controllers\Admin\RecommendationManagementController;
+use App\Http\Controllers\Admin\GlobalRiskMapController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 use App\Http\Controllers\LandingController;
 
+// ============================================================
+// Public Routes
+// ============================================================
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/kebijakan-privasi', [LandingController::class, 'kebijakanPrivasi'])->name('kebijakan-privasi');
 Route::get('/syarat-ketentuan', [LandingController::class, 'syaratKetentuan'])->name('syarat-ketentuan');
 Route::get('/kontak', [LandingController::class, 'kontak'])->name('kontak');
 
+// ============================================================
+// Petani Routes (auth required)
+// ============================================================
 Route::get('/dashboard', [FieldObservationController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -59,7 +72,59 @@ Route::middleware('auth')->group(function () {
     // Insight Historis (Analisis Tren & Pola)
     Route::get('/insight-historis', [HistoricalInsightController::class, 'index'])->name('insight-historis.index');
     Route::get('/api/historical-data', [HistoricalInsightController::class, 'getHistoricalData'])->name('api.historical-data');
+
+    // Notifikasi Petani — AGS-87
+    Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifikasi.index');
+    Route::post('/notifikasi/{id}/baca', [NotificationController::class, 'markAsRead'])->name('notifikasi.mark-read');
+    Route::post('/notifikasi/baca-semua', [NotificationController::class, 'markAllAsRead'])->name('notifikasi.mark-all-read');
+    Route::get('/api/notifikasi/unread-count', [NotificationController::class, 'unreadCount'])->name('api.notifikasi.unread-count');
 });
 
-require __DIR__.'/auth.php';
+// ============================================================
+// Admin Routes (auth + admin role required)
+// ============================================================
+Route::middleware(['auth', 'verified', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // Dashboard Admin — AGS-81
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+        // Manajemen Pengguna — AGS-90
+        Route::get('/pengguna', [UserManagementController::class, 'index'])->name('pengguna.index');
+        Route::get('/pengguna/{user}', [UserManagementController::class, 'show'])->name('pengguna.show');
+        Route::put('/pengguna/{user}', [UserManagementController::class, 'update'])->name('pengguna.update');
+        Route::patch('/pengguna/{user}/status', [UserManagementController::class, 'toggleStatus'])->name('pengguna.toggle-status');
+
+        // Manajemen Lahan & Observasi — AGS-91
+        Route::get('/lahan', [LandManagementController::class, 'index'])->name('lahan.index');
+        Route::get('/lahan/{area}', [LandManagementController::class, 'show'])->name('lahan.show');
+        Route::put('/lahan/{area}', [LandManagementController::class, 'update'])->name('lahan.update');
+        Route::delete('/lahan/{area}', [LandManagementController::class, 'destroy'])->name('lahan.destroy');
+
+        // Manajemen Rekomendasi — AGS-92
+        Route::get('/rekomendasi', [RecommendationManagementController::class, 'index'])->name('rekomendasi.index');
+        Route::post('/rekomendasi', [RecommendationManagementController::class, 'store'])->name('rekomendasi.store');
+        Route::put('/rekomendasi/{id}', [RecommendationManagementController::class, 'update'])->name('rekomendasi.update');
+        Route::delete('/rekomendasi/{id}', [RecommendationManagementController::class, 'destroy'])->name('rekomendasi.destroy');
+
+        // Peta Risiko Global — AGS-93
+        Route::get('/peta-risiko', [GlobalRiskMapController::class, 'index'])->name('peta-risiko.index');
+        Route::get('/api/peta-risiko', [GlobalRiskMapController::class, 'getData'])->name('api.peta-risiko');
+
+        // Riwayat Aktivitas & Laporan — AGS-94
+        Route::get('/laporan', [ActivityLogController::class, 'index'])->name('laporan.index');
+        Route::get('/api/laporan', [ActivityLogController::class, 'getData'])->name('api.laporan');
+        Route::get('/laporan/export', [ActivityLogController::class, 'exportCsv'])->name('laporan.export');
+
+        // Sistem Notifikasi Admin — AGS-95
+        Route::get('/notifikasi', [AdminNotificationController::class, 'index'])->name('notifikasi.index');
+        Route::post('/notifikasi/kirim', [AdminNotificationController::class, 'send'])->name('notifikasi.send');
+        Route::get('/notifikasi/riwayat', [AdminNotificationController::class, 'history'])->name('notifikasi.history');
+
+        // Pengaturan Admin — AGS-96
+        Route::get('/pengaturan', [AdminSettingsController::class, 'index'])->name('pengaturan.index');
+        Route::put('/pengaturan', [AdminSettingsController::class, 'update'])->name('pengaturan.update');
+    });
+
+require __DIR__.'/auth.php';
