@@ -24,3 +24,7 @@ Thumbs.db
 
 # Switch scripts (local only)
 switch-*.ps1
+
+# File environment lokal (jangan di-commit)
+.env.testing
+.env.dusk.local
