@@ -79,6 +79,7 @@ export default function RiwayatLahan({ auth, areas }) {
                             placeholder="Cari kata kunci..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
+                            onKeyDown={e => e.key === 'Escape' && setSearchQuery('')}
                             className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm
                                        focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
@@ -95,7 +96,25 @@ export default function RiwayatLahan({ auth, areas }) {
                                 </option>
                             ))}
                         </select>
+                        {(searchQuery || selectedArea) && (
+                            <button
+                                onClick={() => { setSearchQuery(''); setSelectedArea(''); }}
+                                className="px-4 py-2 text-sm text-gray-500 border border-gray-300 rounded-lg
+                                           hover:bg-gray-50 transition-colors whitespace-nowrap"
+                            >
+                                Bersihkan filter
+                            </button>
+                        )}
                     </div>
+
+                    {/* Result Count */}
+                    {!loading && (
+                        <p className="text-xs text-gray-400">
+                            {data.length > 0
+                                ? `Menampilkan ${data.length} hasil`
+                                : null}
+                        </p>
+                    )}
 
                     {/* Tab Buttons */}
                     <div className="flex gap-1 border-b border-gray-200">
