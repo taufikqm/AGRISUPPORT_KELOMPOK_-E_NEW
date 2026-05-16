@@ -70,7 +70,7 @@ class AdminDashboardTest extends TestCase
     public function test_guest_diarahkan_ke_login(): void
     {
         $this->get(route('admin.dashboard'))
-            ->assertRedirect(route('admin.login'));
+            ->assertRedirect(route('login'));
     }
 
     public function test_login_admin_diarahkan_ke_dashboard_admin(): void

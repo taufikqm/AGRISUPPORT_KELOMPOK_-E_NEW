@@ -6,6 +6,13 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
+// DatabaseTransactions: tidak jalankan migrate:fresh — aman untuk Supabase cloud.
+
+/**
+ * PHPUnit Feature Test — Role System & Autentikasi Admin (AGS-89)
+ * Assignee: Taufik Qurohman
+ * Command : php artisan test --filter=AdminAuthTest
+ */
 class AdminAuthTest extends TestCase
 {
     use DatabaseTransactions;
@@ -14,7 +21,7 @@ class AdminAuthTest extends TestCase
     {
         $admin = User::factory()->state(['role' => 'admin'])->create();
 
-        $response = $this->post(route('admin.login.post'), [
+        $response = $this->post(route('login'), [
             'email'    => $admin->email,
             'password' => 'password',
         ]);
@@ -27,7 +34,7 @@ class AdminAuthTest extends TestCase
     {
         $admin = User::factory()->state(['role' => 'admin'])->create();
 
-        $response = $this->post(route('admin.login.post'), [
+        $response = $this->post(route('login'), [
             'email'    => $admin->email,
             'password' => 'salah-password',
         ]);
@@ -38,7 +45,7 @@ class AdminAuthTest extends TestCase
 
     public function test_admin_login_fails_with_unknown_email(): void
     {
-        $response = $this->post(route('admin.login.post'), [
+        $response = $this->post(route('login'), [
             'email'    => 'tidakada@email.com',
             'password' => 'password',
         ]);
@@ -56,11 +63,11 @@ class AdminAuthTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 
-    public function test_guest_is_redirected_to_admin_login(): void
+    public function test_guest_is_redirected_to_login(): void
     {
         $response = $this->get('/admin/dashboard');
 
-        $response->assertRedirect(route('admin.login'));
+        $response->assertRedirect(route('login'));
     }
 
     public function test_admin_can_logout(): void
@@ -69,7 +76,7 @@ class AdminAuthTest extends TestCase
 
         $response = $this->actingAs($admin)->post(route('admin.logout'));
 
-        $response->assertRedirect(route('admin.login'));
+        $response->assertRedirect(route('login'));
         $this->assertGuest();
     }
 

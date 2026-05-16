@@ -23,12 +23,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureIsAdmin::class,
         ]);
 
-        $middleware->redirectGuestsTo(function (Request $request) {
-            if ($request->is('admin/*')) {
-                return route('admin.login');
-            }
-            return route('login');
-        });
+        $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(function (Request $request) {
             return $request->user()?->role === 'admin'
                 ? route('admin.dashboard')

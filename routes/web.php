@@ -85,10 +85,6 @@ Route::middleware('auth')->group(function () {
 // Admin Authentication Routes
 // ============================================================
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
-    });
     Route::post('/logout', [AdminAuthController::class, 'logout'])
         ->middleware('auth')
         ->name('logout');
