@@ -148,19 +148,40 @@ php artisan dusk:chrome-driver --detect
 
 ### Naming Convention Branch
 
+**Sprint 1** (referensi, sudah selesai):
 ```
-Format: <type>/<jira-key>-<deskripsi-singkat>
+Format: feat/<developer>/<nama-fitur>
 
-Contoh:
-  feature/AGS-89-role-system-admin
-  feature/AGS-82-peta-risiko
-  fix/AGS-71-filter-riwayat-lahan
-  hotfix/AGS-88-profile-validation
+Contoh Sprint 1:
+  feat/taufik/landing-page
+  feat/bian/mesin-risiko
+  feat/ketrin/rekomendasi-index
+  feat/arjuna/wilayah-lahan
 ```
+
+**Sprint 2** (konvensi aktif):
+```
+Format: feat/sprint-2/<developer>/<nama-pbi>
+
+Contoh Sprint 2:
+  feat/sprint-2/taufik/dashboard-admin
+  feat/sprint-2/taufik/notifikasi-admin
+  feat/sprint-2/bian/riwayat-lahan
+  feat/sprint-2/bian/manajemen-pengguna
+  feat/sprint-2/arjuna/peta-risiko
+  feat/sprint-2/arjuna/manajemen-lahan-admin
+  feat/sprint-2/daenisty/prediksi-waktu-tanam
+  feat/sprint-2/daenisty/manajemen-rekomendasi
+  feat/sprint-2/ketrin/insight-historis
+  feat/sprint-2/ketrin/notifikasi-petani
+  feat/sprint-2/tavy/pengaturan-profil
+```
+
+> Satu branch = satu PBI. Setiap commit di dalam branch mewakili satu subtask Jira.
 
 | Type | Kapan Digunakan |
 |------|----------------|
-| `feature/` | Penambahan fitur baru (PBI Sprint 2) |
+| `feat/sprint-2/` | Penambahan fitur baru Sprint 2 (gunakan ini) |
 | `fix/` | Perbaikan bug pada fitur yang sudah ada |
 | `hotfix/` | Perbaikan kritis di production/staging |
 | `refactor/` | Restrukturisasi kode tanpa perubahan fungsional |
@@ -173,9 +194,12 @@ git config user.name  "Nama Developer"
 git config user.email "email@developer.com"
 
 # LANGKAH 2 — Buat atau pindah ke branch PBI Anda
-git checkout -b feature/AGS-XX-nama-fitur   # branch baru
+git checkout -b feat/sprint-2/<developer>/<nama-pbi>   # branch baru
 # atau
-git checkout feature/AGS-XX-nama-fitur      # branch sudah ada
+git checkout feat/sprint-2/<developer>/<nama-pbi>      # branch sudah ada
+
+# Contoh nyata:
+# git checkout -b feat/sprint-2/taufik/dashboard-admin
 
 # LANGKAH 3 — Pull update terbaru sebelum mulai kerja
 git pull origin master
@@ -186,11 +210,11 @@ git pull origin master
 git add app/Http/Controllers/XxxController.php
 git add resources/js/Pages/Xxx.jsx
 
-# LANGKAH 6 — Commit (1 commit per subtask)
+# LANGKAH 6 — Commit (1 commit per subtask, sertakan ID subtask Jira)
 git commit -m "feat(AGS-XX): deskripsi perubahan singkat"
 
 # LANGKAH 7 — Push ke remote
-git push origin feature/AGS-XX-nama-fitur
+git push origin feat/sprint-2/<developer>/<nama-pbi>
 
 # LANGKAH 8 — Buat Pull Request di GitHub ke branch master
 ```

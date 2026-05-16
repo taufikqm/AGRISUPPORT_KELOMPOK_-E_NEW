@@ -9,6 +9,7 @@ use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\RiskMapController;
 use App\Http\Controllers\PlantingTimeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\LandManagementController;
@@ -78,6 +79,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifikasi/{id}/baca', [NotificationController::class, 'markAsRead'])->name('notifikasi.mark-read');
     Route::post('/notifikasi/baca-semua', [NotificationController::class, 'markAllAsRead'])->name('notifikasi.mark-all-read');
     Route::get('/api/notifikasi/unread-count', [NotificationController::class, 'unreadCount'])->name('api.notifikasi.unread-count');
+});
+
+// ============================================================
+// Admin Authentication Routes
+// ============================================================
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::post('/logout', [AdminAuthController::class, 'logout'])
+        ->middleware('auth')
+        ->name('logout');
 });
 
 // ============================================================

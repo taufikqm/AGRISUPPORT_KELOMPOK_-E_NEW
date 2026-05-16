@@ -5,8 +5,10 @@ namespace Tests\Feature\Admin;
 use App\Models\AgriculturalArea;
 use App\Models\FieldObservation;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
+
+// DatabaseTransactions: tidak jalankan migrate:fresh — aman untuk Supabase cloud.
 
 /**
  * PHPUnit Feature Test — Dashboard Admin (AGS-81)
@@ -15,7 +17,7 @@ use Tests\TestCase;
  */
 class AdminDashboardTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_admin_dapat_akses_dashboard(): void
     {
@@ -34,9 +36,13 @@ class AdminDashboardTest extends TestCase
 
     public function test_dashboard_menampilkan_statistik_yang_benar(): void
     {
-        $admin   = User::factory()->admin()->create();
-        $farmers = User::factory()->count(3)->create();
+        $admin = User::factory()->admin()->create();
 
+        $basePetani = User::where('role', 'petani')->count();
+        $baseLahan  = AgriculturalArea::count();
+        $baseObs    = FieldObservation::count();
+
+        $farmers = User::factory()->count(3)->create();
         foreach ($farmers as $farmer) {
             $area = AgriculturalArea::factory()->for($farmer)->create();
             FieldObservation::factory()->forArea($area)->create();
@@ -46,9 +52,9 @@ class AdminDashboardTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page
-                ->where('totalPetani', 3)
-                ->where('totalLahan', 3)
-                ->where('totalObservasi', 3)
+                ->where('totalPetani', $basePetani + 3)
+                ->where('totalLahan', $baseLahan + 3)
+                ->where('totalObservasi', $baseObs + 3)
             );
     }
 
@@ -58,7 +64,7 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($farmer)
             ->get(route('admin.dashboard'))
-            ->assertStatus(403);
+            ->assertRedirect(route('dashboard'));
     }
 
     public function test_guest_diarahkan_ke_login(): void

@@ -10,8 +10,9 @@ class EnsureIsAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || $request->user()->role !== 'admin') {
-            abort(403, 'Akses ditolak. Halaman ini khusus admin.');
+        if ($request->user()->role !== 'admin') {
+            return redirect()->route('dashboard')
+                ->with('error', 'Akses tidak diizinkan. Halaman ini khusus admin.');
         }
 
         return $next($request);
