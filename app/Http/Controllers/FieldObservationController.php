@@ -19,6 +19,10 @@ class FieldObservationController extends Controller
 
     public function dashboard(Request $request)
     {
+        if (Auth::user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
         $userId  = Auth::id();
         $areas   = AgriculturalArea::where('user_id', $userId)->get(['id', 'name', 'location_name']);
         $areaId  = $request->query('area_id');

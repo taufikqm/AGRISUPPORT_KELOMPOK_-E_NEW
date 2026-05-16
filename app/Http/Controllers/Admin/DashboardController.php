@@ -3,45 +3,36 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgriculturalArea;
+use App\Models\FieldObservation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-/**
- * ============================================================
- * STUB: Admin\DashboardController — Dashboard Admin (AGS-81)
- * ============================================================
- * ASSIGNEE : Taufik
- * BRANCH   : feature/AGS-81-dashboard-admin
- *
- * FILE TERKAIT:
- *   - resources/js/Pages/Admin/Dashboard.jsx
- *   - resources/js/Layouts/AdminLayout.jsx
- *
- * MODEL YANG DIGUNAKAN:
- *   - App\Models\User          (total petani, user baru)
- *   - App\Models\AgriculturalArea (total lahan)
- *   - App\Models\FieldObservation (total observasi, observasi terbaru)
- *
- * ROUTE (routes/web.php):
- *   GET /admin/dashboard → index()
- *
- * DATA YANG DIKIRIM KE FRONTEND:
- *   - totalPetani    : jumlah user dengan role 'petani'
- *   - totalLahan     : jumlah seluruh lahan di sistem
- *   - totalObservasi : jumlah seluruh observasi
- *   - observasiTerbaru : 5 observasi terbaru dari semua petani
- *   - petaniBaru     : 5 petani yang baru bergabung
- *   - statistikRisiko: distribusi risk level (tinggi/sedang/rendah)
- * ============================================================
- */
 class DashboardController extends Controller
 {
-    /**
-     * TODO: Tampilkan dashboard admin dengan ringkasan statistik sistem.
-     * Gunakan Inertia::render('Admin/Dashboard', [...]).
-     */
     public function index(Request $request)
     {
-        // TODO: Implementasi di sini
+        $totalPetani    = User::where('role', 'petani')->count();
+        $totalLahan     = AgriculturalArea::count();
+        $totalObservasi = FieldObservation::count();
+
+        $observasiTerbaru = FieldObservation::with('agriculturalArea:id,name')
+            ->latest('observation_date')
+            ->limit(5)
+            ->get(['id', 'agricultural_area_id', 'observation_date', 'crop_condition']);
+
+        $petaniBaru = User::where('role', 'petani')
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'name', 'email', 'created_at']);
+
+        return Inertia::render('Admin/Dashboard', [
+            'totalPetani'      => $totalPetani,
+            'totalLahan'       => $totalLahan,
+            'totalObservasi'   => $totalObservasi,
+            'observasiTerbaru' => $observasiTerbaru,
+            'petaniBaru'       => $petaniBaru,
+        ]);
     }
 }

@@ -16,12 +16,9 @@ class FieldObservationFactory extends Factory
 
     public function definition(): array
     {
-        $user = User::factory()->create();
-        $area = AgriculturalArea::factory()->for($user)->create();
-
         return [
-            'user_id' => $user->id,
-            'agricultural_area_id' => $area->id,
+            'user_id'               => User::factory(),
+            'agricultural_area_id'  => AgriculturalArea::factory(),
             'planting_cycle' => fake()->randomElement(['MT1', 'MT2', 'MT3', null]),
             'observation_date' => fake()->dateTimeBetween('-6 months', 'now')->format('Y-m-d'),
             'soil_moisture' => fake()->randomElement(['Kering', 'Normal', 'Lembab', 'Sangat Basah']),
