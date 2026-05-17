@@ -1,0 +1,1 @@
+import{j as e,H as a}from"./app-k8PLMNSW.js";import{A as n}from"./AdminLayout-6zsZCyaw.js";function d({auth:t,recommendations:m,actionLogs:s,filters:i}){return e.jsxs(n,{title:"Manajemen Rekomendasi",currentRoute:"admin.rekomendasi.index",children:[e.jsx(a,{title:"Manajemen Rekomendasi"}),e.jsx("div",{className:"py-8 px-4 sm:px-6 lg:px-8"})]})}export{d as default};
