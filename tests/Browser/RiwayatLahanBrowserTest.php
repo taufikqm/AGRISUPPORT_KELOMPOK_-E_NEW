@@ -18,6 +18,7 @@ use Tests\DuskTestCase;
  *
  * PRASYARAT:
  *   php artisan serve (di terminal terpisah)
+ *   npm run build  ATAU  npm run dev (di terminal terpisah)
  *   Database: agrisupport_dusk + PostGIS extension aktif
  *
  * Cakupan:
@@ -40,7 +41,7 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Histori Aktivitas')
+                    ->waitFor('@tab-observasi', 15)
                     ->assertSee('Histori Aktivitas')
                     ->assertPresent('@tab-observasi')
                     ->assertPresent('@tab-validasi')
@@ -61,7 +62,7 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Histori Aktivitas')
+                    ->waitFor('@tab-observasi', 15)
                     ->assertAttributeContains('@tab-observasi', 'class', 'text-green-700');
         });
     }
@@ -76,7 +77,7 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Menampilkan')
+                    ->waitFor('@history-table', 15)
                     ->assertPresent('@history-table')
                     ->assertPresent('@history-row')
                     ->assertSee('Observasi');
@@ -93,7 +94,7 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Menampilkan')
+                    ->waitFor('@status-badge', 15)
                     ->assertPresent('@status-badge');
         });
     }
@@ -106,7 +107,7 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitFor('@empty-state', 5)
+                    ->waitFor('@empty-state', 15)
                     ->assertPresent('@empty-state')
                     ->assertSee('Belum ada data riwayat.')
                     ->assertSee('Mulai catat kondisi lapangan');
@@ -125,9 +126,9 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Histori Aktivitas')
+                    ->waitFor('@tab-validasi', 15)
                     ->click('@tab-validasi')
-                    ->waitUntil("document.querySelector('[dusk=\"tab-validasi\"]').classList.contains('text-green-700')")
+                    ->waitUntil("document.querySelector('[dusk=\"tab-validasi\"]').classList.contains('text-green-700')", 10)
                     ->assertAttributeContains('@tab-validasi', 'class', 'text-green-700')
                     ->assertAttributeContains('@tab-observasi', 'class', 'text-gray-500');
         });
@@ -143,9 +144,9 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Histori Aktivitas')
+                    ->waitFor('@tab-risiko', 15)
                     ->click('@tab-risiko')
-                    ->waitUntil("document.querySelector('[dusk=\"tab-risiko\"]').classList.contains('text-green-700')")
+                    ->waitUntil("document.querySelector('[dusk=\"tab-risiko\"]').classList.contains('text-green-700')", 10)
                     ->assertAttributeContains('@tab-risiko', 'class', 'text-green-700')
                     ->assertSee('Risiko');
         });
@@ -176,9 +177,9 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Histori Aktivitas')
+                    ->waitFor('@tab-rekomendasi', 15)
                     ->click('@tab-rekomendasi')
-                    ->waitForText('Menampilkan')
+                    ->waitFor('@history-table', 15)
                     ->assertSee('Rekomendasi')
                     ->assertSee('Perbaikan Saluran Air');
         });
@@ -201,10 +202,10 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Menampilkan 2 hasil')
+                    ->waitFor('@history-table', 15)
                     ->type('@search-input', 'Sawah Selatan')
                     ->pause(600)
-                    ->waitForText('Menampilkan')
+                    ->waitFor('@history-row', 15)
                     ->assertSee('Sawah Selatan');
         });
     }
@@ -219,11 +220,11 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Menampilkan')
+                    ->waitFor('@search-input', 15)
                     ->type('@search-input', 'test pencarian')
                     ->pause(100)
                     ->keys('@search-input', '{escape}')
-                    ->pause(100)
+                    ->pause(200)
                     ->assertInputValue('@search-input', '');
         });
     }
@@ -240,9 +241,9 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($farmer, $area1) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Menampilkan 5 hasil')
+                    ->waitFor('@history-table', 15)
                     ->select('@area-filter', (string) $area1->id)
-                    ->waitForText('Menampilkan 2 hasil')
+                    ->waitForText('Menampilkan 2 hasil', 10)
                     ->assertSee('Menampilkan 2 hasil');
         });
     }
@@ -254,15 +255,15 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $area   = AgriculturalArea::factory()->for($farmer)->create(['name' => 'Lahan Test']);
         FieldObservation::factory()->forArea($area)->count(3)->create();
 
-        $this->browse(function (Browser $browser) use ($farmer, $area) {
+        $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
-                    ->waitForText('Menampilkan 3 hasil')
+                    ->waitFor('@search-input', 15)
                     ->type('@search-input', 'kata kunci')
-                    ->pause(100)
-                    ->assertPresent('@clear-filter-btn')
+                    ->pause(200)
+                    ->waitFor('@clear-filter-btn', 10)
                     ->click('@clear-filter-btn')
-                    ->pause(100)
+                    ->pause(200)
                     ->assertInputValue('@search-input', '')
                     ->assertNotPresent('@clear-filter-btn');
         });

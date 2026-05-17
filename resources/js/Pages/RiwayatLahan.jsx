@@ -60,12 +60,8 @@ export default function RiwayatLahan({ auth, areas }) {
 
     return (
         <AuthenticatedLayout
-            user={auth.user}
-            header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    Histori Aktivitas &amp; Analisis
-                </h2>
-            }
+            title="Histori Aktivitas & Analisis"
+            currentRoute="riwayat-lahan.index"
         >
             <Head title="Riwayat Lahan" />
 

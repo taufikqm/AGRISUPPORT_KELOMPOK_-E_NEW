@@ -27,10 +27,12 @@ class FieldObservation extends Model
         'weather_wind_kph',
         'weather_precip_mm',
         'weather_soil_moisture',
+        'recommendations_viewed_at',
     ];
 
     protected $casts = [
-        'observation_date' => 'date',
+        'observation_date'           => 'date',
+        'recommendations_viewed_at'  => 'datetime',
     ];
 
     public function user(): BelongsTo

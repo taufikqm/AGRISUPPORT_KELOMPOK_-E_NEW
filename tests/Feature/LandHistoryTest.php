@@ -31,7 +31,8 @@ class LandHistoryTest extends TestCase
     {
         $farmer = User::factory()->create();
         $area   = AgriculturalArea::factory()->for($farmer)->create();
-        FieldObservation::factory()->forArea($area)->count(3)->create();
+        FieldObservation::factory()->forArea($area)->count(3)
+            ->create(['recommendations_viewed_at' => now()]);
 
         $this->actingAs($farmer)
             ->getJson(route('api.land-history'))
@@ -45,8 +46,10 @@ class LandHistoryTest extends TestCase
         $farmer = User::factory()->create();
         $area1  = AgriculturalArea::factory()->for($farmer)->create();
         $area2  = AgriculturalArea::factory()->for($farmer)->create();
-        FieldObservation::factory()->forArea($area1)->count(2)->create();
-        FieldObservation::factory()->forArea($area2)->count(3)->create();
+        FieldObservation::factory()->forArea($area1)->count(2)
+            ->create(['recommendations_viewed_at' => now()]);
+        FieldObservation::factory()->forArea($area2)->count(3)
+            ->create(['recommendations_viewed_at' => now()]);
 
         $this->actingAs($farmer)
             ->getJson(route('api.land-history', ['area_id' => $area1->id]))

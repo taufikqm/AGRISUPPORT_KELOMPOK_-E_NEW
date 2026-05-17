@@ -1,1 +1,0 @@
-import{j as t,H as s}from"./app-BCnZSc2J.js";import{A as e}from"./AuthenticatedLayout-p9ixEA9N.js";function u({auth:i,notifications:a,unreadCount:o}){return t.jsxs(e,{user:i.user,title:"Notifikasi",currentRoute:"notifikasi.index",children:[t.jsx(s,{title:"Notifikasi"}),t.jsx("div",{className:"py-8 px-4 sm:px-6 lg:px-8"})]})}export{u as default};
