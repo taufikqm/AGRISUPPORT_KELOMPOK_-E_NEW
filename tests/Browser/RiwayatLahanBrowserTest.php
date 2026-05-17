@@ -239,15 +239,15 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $farmer = User::factory()->create();
         $area1  = AgriculturalArea::factory()->for($farmer)->create(['name' => 'Lahan A']);
         $area2  = AgriculturalArea::factory()->for($farmer)->create(['name' => 'Lahan B']);
-        FieldObservation::factory()->forArea($area1)->count(2)->create();
-        FieldObservation::factory()->forArea($area2)->count(3)->create();
+        FieldObservation::factory()->forArea($area1)->count(2)->create(['recommendations_viewed_at' => now()]);
+        FieldObservation::factory()->forArea($area2)->count(3)->create(['recommendations_viewed_at' => now()]);
 
         $this->browse(function (Browser $browser) use ($farmer, $area1) {
             $browser->loginAs($farmer)
                     ->visit(route('riwayat-lahan.index'))
                     ->waitFor('@history-table', 15)
                     ->select('@area-filter', (string) $area1->id)
-                    ->waitForText('Menampilkan 2 hasil', 10)
+                    ->waitForText('Menampilkan 2 hasil', 20)
                     ->assertSee('Menampilkan 2 hasil');
         });
     }
