@@ -72,7 +72,8 @@ class RiwayatLahanBrowserTest extends DuskTestCase
     {
         $farmer = User::factory()->create();
         $area   = AgriculturalArea::factory()->for($farmer)->create(['name' => 'Sawah Utama']);
-        FieldObservation::factory()->forArea($area)->count(3)->create();
+        FieldObservation::factory()->forArea($area)->count(3)
+            ->create(['recommendations_viewed_at' => now()]);
 
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
@@ -89,7 +90,8 @@ class RiwayatLahanBrowserTest extends DuskTestCase
     {
         $farmer = User::factory()->create();
         $area   = AgriculturalArea::factory()->for($farmer)->create();
-        FieldObservation::factory()->forArea($area)->count(2)->create();
+        FieldObservation::factory()->forArea($area)->count(2)
+            ->create(['recommendations_viewed_at' => now()]);
 
         $this->browse(function (Browser $browser) use ($farmer) {
             $browser->loginAs($farmer)
@@ -191,12 +193,14 @@ class RiwayatLahanBrowserTest extends DuskTestCase
         $farmer = User::factory()->create();
         $area   = AgriculturalArea::factory()->for($farmer)->create(['name' => 'Sawah Selatan']);
         FieldObservation::factory()->forArea($area)->create([
-            'crop_condition' => 'Baik',
-            'notes'          => 'kondisi padi sangat subur',
+            'crop_condition'          => 'Baik',
+            'notes'                   => 'kondisi padi sangat subur',
+            'recommendations_viewed_at' => now(),
         ]);
         FieldObservation::factory()->forArea($area)->create([
-            'crop_condition' => 'Kritis',
-            'notes'          => 'tanaman layu parah',
+            'crop_condition'          => 'Kritis',
+            'notes'                   => 'tanaman layu parah',
+            'recommendations_viewed_at' => now(),
         ]);
 
         $this->browse(function (Browser $browser) use ($farmer) {
