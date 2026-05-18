@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const TABS = [
     { key: 'observasi',   label: 'Observasi' },
@@ -41,17 +41,17 @@ export default function RiwayatLahan({ auth, areas }) {
         }
     }, []);
 
-    useEffect(() => {
-        fetchData(activeTab, selectedArea, searchQuery);
-    }, [activeTab, selectedArea]);
+    const prevSearchRef = useRef(searchQuery);
 
     useEffect(() => {
-        const timer = setTimeout(
-            () => fetchData(activeTab, selectedArea, searchQuery),
-            400
-        );
+        const searchChanged = prevSearchRef.current !== searchQuery;
+        prevSearchRef.current = searchQuery;
+
+        // Debounce hanya saat user mengetik — tab/area/clear langsung fetch
+        const delay = searchChanged && searchQuery !== '' ? 400 : 0;
+        const timer = setTimeout(() => fetchData(activeTab, selectedArea, searchQuery), delay);
         return () => clearTimeout(timer);
-    }, [searchQuery]);
+    }, [activeTab, selectedArea, searchQuery, fetchData]);
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
