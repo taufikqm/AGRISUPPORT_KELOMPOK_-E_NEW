@@ -27,4 +27,8 @@ switch-*.ps1
 
 # File environment lokal (jangan di-commit)
 .env.testing
+
+# File lokal Claude Code (jangan di-commit)
+CLAUDE.md
+docs/testing.md
 .env.dusk.local

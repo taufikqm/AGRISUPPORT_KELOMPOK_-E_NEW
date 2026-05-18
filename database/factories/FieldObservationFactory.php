@@ -28,11 +28,12 @@ class FieldObservationFactory extends Factory
             'disease_indication' => fake()->randomElement(['Tidak Ada', 'Ringan', 'Sedang', 'Berat']),
             'notes' => fake()->optional()->sentence(),
             'weather_temp' => fake()->randomFloat(2, 22.0, 36.0),
-            'weather_condition' => fake()->randomElement(['Cerah', 'Berawan', 'Hujan', 'Mendung']),
+            'weather_condition' => fake()->randomElement(['0', '1', '2', '3', '51', '61', '80']),
             'weather_humidity' => fake()->randomFloat(2, 50.0, 95.0),
             'weather_wind_kph' => fake()->randomFloat(2, 0.0, 30.0),
             'weather_precip_mm' => fake()->randomFloat(2, 0.0, 50.0),
             'weather_soil_moisture' => fake()->randomFloat(3, 0.1, 0.9),
+            'recommendations_viewed_at' => null,
         ];
     }
 

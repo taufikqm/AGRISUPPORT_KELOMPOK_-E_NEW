@@ -33,6 +33,7 @@ class AgriculturalAreaFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->words(3, true) . ' Farm',
+            'location_name' => fake()->city(),
             'area_size' => fake()->randomFloat(2, 0.5, 10.0),
             'soil_type' => fake()->randomElement(['liat', 'pasir', 'lempung', 'gambut']),
             'notes' => fake()->optional()->sentence(),

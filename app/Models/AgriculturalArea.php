@@ -13,6 +13,7 @@ class AgriculturalArea extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'location_name',
         'area_size',
         'soil_type',
         'notes',
