@@ -53,7 +53,8 @@ class HandleInertiaRequests extends Middleware
         $observations = \App\Models\FieldObservation::where('user_id', $userId)
             ->whereNotNull('weather_precip_mm')
             ->with('agriculturalArea:id,name')
-            ->latest('observation_date')
+            ->orderBy('observation_date', 'desc')
+            ->orderBy('id', 'desc')
             ->get()
             ->uniqueStrict('agricultural_area_id')
             ->take(5);

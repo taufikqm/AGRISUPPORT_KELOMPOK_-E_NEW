@@ -31,7 +31,8 @@ class FieldObservationController extends Controller
 
         $obsQuery = FieldObservation::where('user_id', $userId)
             ->with('agriculturalArea:id,name,soil_type')
-            ->latest('observation_date');
+            ->orderBy('observation_date', 'desc')
+            ->orderBy('id', 'desc');
 
         if ($areaId && $areas->contains('id', (int) $areaId)) {
             $obsQuery->where('agricultural_area_id', $areaId);
@@ -220,7 +221,7 @@ class FieldObservationController extends Controller
         ];
 
         try {
-            $response = Http::timeout(5)->get('https://api.open-meteo.com/v1/forecast', [
+            $response = Http::connectTimeout(3)->timeout(4)->get('https://api.open-meteo.com/v1/forecast', [
                 'latitude'  => $centroid->lat,
                 'longitude' => $centroid->lon,
                 'current'   => 'temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code,soil_moisture_0_to_1cm',
