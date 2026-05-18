@@ -27,7 +27,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(function (Request $request) {
             return $request->user()?->role === 'admin'
                 ? route('admin.dashboard')
-                : route('wilayah-lahan.index');
+                : route('dashboard');
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {

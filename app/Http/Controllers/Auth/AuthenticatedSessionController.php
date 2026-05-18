@@ -37,7 +37,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        return redirect()->route('wilayah-lahan.index');
+        return redirect()->route('dashboard');
     }
 
     /**
