@@ -72,15 +72,20 @@ class HistoricalInsightController extends Controller
             ];
         });
 
-        $grouped = $scored->groupBy(fn ($row) => $row['observation']->observation_date->format('Y-m'));
+        // Granularitas adaptif: rentang harian (7/30) dikelompokkan per hari,
+        // "Tahun Ini" dikelompokkan per bulan agar tren sesuai skala filter.
+        $isDaily = (bool) $range;
+        $keyFmt  = $isDaily ? 'Y-m-d' : 'Y-m';
 
-        $trendData = $grouped->map(function ($group, $key) {
-            $dt   = Carbon::createFromFormat('Y-m', $key);
-            $obs  = $group->pluck('observation');
+        $grouped = $scored->groupBy(fn ($row) => $row['observation']->observation_date->format($keyFmt));
+
+        $trendData = $grouped->map(function ($group, $key) use ($isDaily, $keyFmt) {
+            $dt  = Carbon::createFromFormat($keyFmt, $key);
+            $obs = $group->pluck('observation');
 
             return [
-                'bulan'      => $dt->translatedFormat('M Y'),
-                'bulanShort' => $dt->translatedFormat('M'),
+                'bulan'      => $isDaily ? $dt->translatedFormat('d M Y') : $dt->translatedFormat('M Y'),
+                'bulanShort' => $isDaily ? $dt->translatedFormat('d M')   : $dt->translatedFormat('M'),
                 'suhu'       => round($obs->avg('weather_temp') ?? 0, 1),
                 'kelembapan' => round($obs->avg('weather_humidity') ?? 0, 1),
                 'curahHujan' => round($obs->sum('weather_precip_mm') ?? 0, 1),
