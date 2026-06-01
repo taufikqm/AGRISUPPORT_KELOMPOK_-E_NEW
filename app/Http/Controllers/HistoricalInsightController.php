@@ -126,13 +126,16 @@ class HistoricalInsightController extends Controller
         $avgHumidity = $trendData->avg('kelembapan') ?? 0;
         $avgRisk     = $trendData->avg('riskIndex') ?? 0;
 
-        $months = $trendData->count();
-        $half   = max(1, intdiv($months, 2));
-        $firstHalfRain  = $trendData->take($half)->sum('curahHujan');
-        $secondHalfRain = $trendData->slice($half)->sum('curahHujan');
-        $rainTrend = $firstHalfRain > 0
-            ? (int) round((($secondHalfRain - $firstHalfRain) / $firstHalfRain) * 100)
-            : 0;
+        $months    = $trendData->count();
+        $rainTrend = 0;
+        if ($months >= 2) {
+            $half           = intdiv($months, 2);
+            $firstHalfRain  = $trendData->take($half)->sum('curahHujan');
+            $secondHalfRain = $trendData->slice($half)->sum('curahHujan');
+            $rainTrend = $firstHalfRain > 0
+                ? (int) round((($secondHalfRain - $firstHalfRain) / $firstHalfRain) * 100)
+                : 0;
+        }
 
         $humidityStatus = match (true) {
             $avgHumidity >= 85 => 'Tinggi',
