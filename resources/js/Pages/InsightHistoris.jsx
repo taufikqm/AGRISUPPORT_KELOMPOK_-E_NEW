@@ -178,6 +178,8 @@ export default function InsightHistoris({ areas = [] }) {
                      : rangeMode === '30' ? '30 hari terakhir'
                      : `Tahun ${currentYear}`;
 
+    const granularityLabel = rangeMode === 'year' ? 'bulanan' : 'harian';
+
     return (
         <AuthenticatedLayout
             title="Insight Historis & Analisis Tren"
@@ -312,7 +314,7 @@ export default function InsightHistoris({ areas = [] }) {
                                             <h3 className="text-lg font-semibold text-[#1e293b] tracking-tight">
                                                 Tren Curah Hujan & Kelembapan
                                             </h3>
-                                            <p className="text-sm text-[#64748b]">Perbandingan bulanan pada periode {rangeLabel}.</p>
+                                            <p className="text-sm text-[#64748b]">Perbandingan {granularityLabel} pada periode {rangeLabel}.</p>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="flex items-center gap-1.5 text-xs font-semibold text-[#64748b]">

@@ -44,8 +44,8 @@ class HistoricalInsightTest extends TestCase
         $farmer = User::factory()->create();
         $area1  = AgriculturalArea::factory()->for($farmer)->create();
         $area2  = AgriculturalArea::factory()->for($farmer)->create();
-        FieldObservation::factory()->forArea($area1)->count(3)->create();
-        FieldObservation::factory()->forArea($area2)->count(2)->create();
+        FieldObservation::factory()->forArea($area1)->count(3)->create(['observation_date' => now()]);
+        FieldObservation::factory()->forArea($area2)->count(2)->create(['observation_date' => now()]);
 
         $this->actingAs($farmer)
             ->getJson(route('api.historical-data', ['area_id' => $area1->id]))
