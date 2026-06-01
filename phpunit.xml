@@ -24,6 +24,11 @@
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_HOST" value="aws-1-ap-northeast-1.pooler.supabase.com"/>
+        <env name="DB_PORT" value="5432"/>
+        <env name="DB_DATABASE" value="postgres"/>
+        <env name="DB_USERNAME" value="postgres.qyxhfqopcyizdzcnnqbf"/>
+        <env name="DB_PASSWORD" value="agrisupport-testing"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
