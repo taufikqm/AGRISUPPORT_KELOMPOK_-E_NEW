@@ -308,15 +308,29 @@ class FieldObservationController extends Controller
             return [
                 'id'             => $obs->id,
                 'date'           => $obs->observation_date,
+                'area_id'        => $obs->agricultural_area_id,
                 'area_name'      => $obs->agriculturalArea->name ?? 'Lahan',
                 'overall_risk'   => $metrics['overall'],
                 'total_recs'     => $recs->count(),
                 'completed_count'=> $completed,
             ];
-        });
+        })
+        ->sortByDesc(fn ($i) => [$i['overall_risk'], $i['date']])
+        ->values();
+
+        $areas = $items
+            ->groupBy('area_id')
+            ->map(fn ($group, $id) => [
+                'id'    => (int) $id,
+                'name'  => $group->first()['area_name'],
+                'count' => $group->count(),
+            ])
+            ->sortByDesc('count')
+            ->values();
 
         return Inertia::render('RekomendasiIndex', [
             'items' => $items,
+            'areas' => $areas,
         ]);
     }
 

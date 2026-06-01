@@ -49,8 +49,8 @@ class HistoricalInsightTest extends TestCase
 
         $this->actingAs($farmer)
             ->getJson(route('api.historical-data', ['area_id' => $area1->id]))
-            ->assertStatus(200);
-        // TODO: assert hanya data area1 yang dikembalikan
+            ->assertStatus(200)
+            ->assertJson(['meta' => ['total_observasi' => 3]]);
     }
 
     public function test_filter_berdasarkan_tahun(): void
@@ -69,6 +69,20 @@ class HistoricalInsightTest extends TestCase
 
         $this->actingAs($farmer)
             ->getJson(route('api.historical-data'))
+            ->assertStatus(200)
+            ->assertJson(['data' => []]);
+    }
+
+    public function test_petani_hanya_melihat_data_lahannya_sendiri(): void
+    {
+        $farmer1 = User::factory()->create();
+        $farmer2 = User::factory()->create();
+        $area2   = AgriculturalArea::factory()->for($farmer2)->create();
+        FieldObservation::factory()->forArea($area2)->count(3)->create();
+
+        // farmer1 mencoba mengakses area milik farmer2
+        $this->actingAs($farmer1)
+            ->getJson(route('api.historical-data', ['area_id' => $area2->id]))
             ->assertStatus(200)
             ->assertJson(['data' => []]);
     }
