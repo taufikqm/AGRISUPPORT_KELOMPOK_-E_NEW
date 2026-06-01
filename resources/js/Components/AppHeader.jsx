@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import NotificationBell from '@/Components/NotificationBell';
 
 export default function AppHeader({ title, badge, onMenuClick, headerActions }) {
     const { auth } = usePage().props;
@@ -32,6 +33,8 @@ export default function AppHeader({ title, badge, onMenuClick, headerActions }) 
                         {headerActions}
                     </div>
                 )}
+
+                <NotificationBell />
 
                 <div className="flex items-center gap-2 md:gap-3 shrink-0">
                     <div className="hidden sm:block text-right">
