@@ -31,4 +31,8 @@ switch-*.ps1
 # File lokal Claude Code (jangan di-commit)
 CLAUDE.md
 docs/testing.md
+docs/database-mapping.md
 .env.dusk.local
+
+# Direktori lokal Claude Code
+/.claude
