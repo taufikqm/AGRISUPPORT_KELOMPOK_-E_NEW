@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Jobs\SendBroadcastNotificationJob;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -42,7 +43,7 @@ class AdminNotificationTest extends TestCase
             ])
             ->assertRedirect();
 
-        // TODO: assert notifikasi tersimpan di tabel notifications untuk semua petani
+        $this->assertDatabaseCount('notifications', 3);
     }
 
     public function test_notifikasi_tersimpan_di_database(): void
@@ -97,8 +98,7 @@ class AdminNotificationTest extends TestCase
                 'target' => 'all',
             ]);
 
-        // TODO: Queue::assertPushed(SendBroadcastNotificationJob::class);
-        $this->assertTrue(true); // placeholder
+        Queue::assertPushed(SendBroadcastNotificationJob::class);
     }
 
     public function test_petani_tidak_bisa_kirim_notifikasi_admin(): void
@@ -111,6 +111,6 @@ class AdminNotificationTest extends TestCase
                 'pesan'  => 'Fake pesan.',
                 'target' => 'all',
             ])
-            ->assertStatus(403);
+            ->assertRedirect(route('dashboard'));
     }
 }
