@@ -28,10 +28,18 @@ export default function NotificationBell() {
 
     useEffect(() => {
         fetchSummary();
-        // Perbarui badge otomatis setiap aksi Inertia berhasil (mis. tandai dibaca,
-        // tandai semua dibaca, atau berpindah halaman) — tanpa perlu refresh manual.
-        const stop = router.on('success', () => fetchSummary());
-        return stop;
+
+        // Update badge saat aksi Inertia berhasil (tandai dibaca, pindah halaman, dll.)
+        const stopInertia = router.on('success', () => fetchSummary());
+
+        // Polling setiap 30 detik — menangkap trigger dari luar browser
+        // (artisan command, scheduler) tanpa perlu refresh manual.
+        const interval = setInterval(fetchSummary, 30_000);
+
+        return () => {
+            stopInertia();
+            clearInterval(interval);
+        };
     }, [fetchSummary]);
 
     return (
