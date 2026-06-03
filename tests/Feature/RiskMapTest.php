@@ -49,16 +49,23 @@ class RiskMapTest extends TestCase
         $farmer = User::factory()->create();
         $area   = AgriculturalArea::factory()->for($farmer)->create();
         FieldObservation::factory()->forArea($area)->create([
-            'soil_moisture'     => 'Sangat Basah',
-            'water_puddle'      => 'Banyak',
-            'crop_condition'    => 'Kritis',
+            'soil_moisture'         => 'Kering',
+            'water_puddle'          => 'Banyak',
+            'disease_indication'    => 'Berat',
+            'weather_precip_mm'     => 20,
+            'weather_soil_moisture' => 0.1,
         ]);
 
-        $response = $this->actingAs($farmer)
-            ->get(route('peta-risiko.index'));
-
-        $response->assertStatus(200);
-        // TODO: assert areas[0].risk_level === 'tinggi'
+        $this->actingAs($farmer)
+            ->get(route('peta-risiko.index'))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('PetaRisiko')
+                ->where('areas.0.risk_level', 'tinggi')
+                ->where('areas.0.color', '#ef4444')
+                ->has('areas.0.dimensions', 3)
+                ->has('areas.0.observation_date')
+            );
     }
 
     public function test_lahan_tanpa_observasi_tetap_tampil(): void

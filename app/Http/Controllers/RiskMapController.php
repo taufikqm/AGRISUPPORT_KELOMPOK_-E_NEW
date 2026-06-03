@@ -2,43 +2,118 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AgriculturalArea;
+use App\Models\FieldObservation;
+use App\Services\RiskCalculationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 /**
- * ============================================================
- * STUB: RiskMapController — Modul Peta Risiko Lahan
- * ============================================================
+ * Peta Risiko Lahan (AGS-82).
  *
- * TUGAS TIM:
- *   Implementasikan method index() di bawah ini sesuai fitur
- *   Peta Risiko Lahan pada aplikasi AgriSupport.
- *
- * FILE TERKAIT YANG PERLU DIISI JUGA:
- *   - resources/js/Pages/PetaRisiko.jsx  (tampilan UI peta risiko)
- *
- * MODEL YANG DIGUNAKAN:
- *   - App\Models\AgriculturalArea  (data wilayah beserta koordinat)
- *   - App\Models\FieldObservation  (data risiko banjir/kekeringan)
- *
- * ROUTE YANG TERHUBUNG (routes/web.php):
- *   GET /peta-risiko → index() : halaman peta risiko
- *
- * CATATAN INTEGRASI PETA:
- *   - Frontend menggunakan Leaflet.js untuk render peta interaktif
- *   - Data yang perlu dikirim: koordinat (lat/lon) + level risiko tiap wilayah
- *   - Format data area: [{ id, name, lat, lon, flood_risk, drought_risk }, ...]
- * ============================================================
+ * Menampilkan semua lahan milik petani sebagai polygon di peta Leaflet,
+ * diwarnai sesuai level risiko dari observasi terbaru tiap lahan.
  */
 class RiskMapController extends Controller
 {
-    /**
-     * TODO: Tampilkan halaman Peta Risiko Lahan.
-     * Kirim data semua wilayah lahan milik user beserta level risikonya.
-     * Gunakan Inertia::render('PetaRisiko', ['areas' => ...]).
-     */
+    public function __construct(private RiskCalculationService $riskService) {}
+
     public function index(Request $request)
     {
-        // TODO: Implementasi di sini
+        $userId = $request->user()->id;
+
+        $areas = AgriculturalArea::where('user_id', $userId)
+            ->selectRaw("
+                id, name, location_name, soil_type,
+                ST_Y(ST_Centroid(geometry)) as latitude,
+                ST_X(ST_Centroid(geometry)) as longitude,
+                ST_AsGeoJSON(geometry) as geojson
+            ")
+            ->get();
+
+        $summary = ['tinggi' => 0, 'sedang' => 0, 'rendah' => 0, 'belum' => 0];
+
+        $areasWithRisk = $areas->map(function ($area) use (&$summary) {
+            $latestObs = FieldObservation::where('agricultural_area_id', $area->id)
+                ->with('agriculturalArea:id,soil_type')
+                ->orderByDesc('observation_date')
+                ->orderByDesc('id')
+                ->first();
+
+            $score      = null;
+            $status     = null;
+            $level      = null;
+            $dimensions = [];
+            $obsDate    = null;
+            $obsAgo     = null;
+            $isStale    = false;
+
+            if ($latestObs) {
+                $metrics = $this->riskService->calculateRiskMetrics($latestObs);
+                $score   = $metrics['overall'];
+                $status  = $this->riskService->statusFromOverall($score);
+                $level   = $this->levelFromScore($score);
+
+                $dimensions = [
+                    ['label' => 'Kekeringan', 'score' => (int) round($metrics['drought'])],
+                    ['label' => 'Genangan',   'score' => (int) round($metrics['puddle'])],
+                    ['label' => 'Penyakit',   'score' => (int) round($metrics['disease'])],
+                ];
+
+                $obsDate = $latestObs->observation_date?->locale('id')->translatedFormat('d M Y');
+                $obsAgo  = $latestObs->observation_date?->locale('id')->diffForHumans();
+                $isStale = $latestObs->observation_date?->lt(now()->subDays(14)) ?? false;
+            }
+
+            $summary[$level ?? 'belum']++;
+
+            $meta = $this->levelMeta($level);
+
+            return [
+                'id'             => $area->id,
+                'name'           => $area->name,
+                'location'       => $area->location_name,
+                'soil_type'      => $area->soil_type,
+                'lat'            => $area->latitude !== null ? (float) $area->latitude : null,
+                'lon'            => $area->longitude !== null ? (float) $area->longitude : null,
+                'geojson'        => $area->geojson ? json_decode($area->geojson) : null,
+                'observation_id'   => $latestObs?->id,
+                'observation_date' => $obsDate,                     // "18 Mei 2026" | null
+                'observation_ago'  => $obsAgo,                      // "2 minggu yang lalu" | null
+                'is_stale'         => $isStale,                     // observasi > 14 hari
+                'risk_level'       => $level,                       // tinggi|sedang|rendah|null
+                'risk_label'       => $meta['label'],
+                'color'            => $meta['color'],
+                'score'            => $score !== null ? (int) round($score) : null,
+                'status'           => $status,                      // Aman|Waspada|Bahaya|Kritis|null
+                'dimensions'       => $dimensions,                  // [{label, score} x3] | []
+            ];
+        });
+
+        return Inertia::render('PetaRisiko', [
+            'areas'       => $areasWithRisk,
+            'riskSummary' => $summary,
+        ]);
+    }
+
+    /** Petakan overall score (0-100) ke level risiko peta. */
+    private function levelFromScore(int $score): string
+    {
+        return match (true) {
+            $score > 70 => 'tinggi',
+            $score > 40 => 'sedang',
+            default     => 'rendah',
+        };
+    }
+
+    /** Label & warna untuk tiap level (abu-abu bila belum ada data). */
+    private function levelMeta(?string $level): array
+    {
+        return match ($level) {
+            'tinggi' => ['label' => 'Tinggi', 'color' => '#ef4444'],
+            'sedang' => ['label' => 'Sedang', 'color' => '#f59e0b'],
+            'rendah' => ['label' => 'Rendah', 'color' => '#22c55e'],
+            default  => ['label' => 'Belum Ada Data', 'color' => '#9ca3af'],
+        };
     }
 }
