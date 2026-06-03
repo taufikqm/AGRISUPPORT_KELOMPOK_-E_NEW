@@ -27,6 +27,7 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
     useEffect(() => {
         if (!mapRef.current || areas.length === 0) return;
         let cancelled = false;
+        const onResize = () => mapInstanceRef.current?.invalidateSize();
 
         const initMap = async () => {
             const L = (await import('leaflet')).default;
@@ -74,12 +75,17 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
             if (layers.length) {
                 map.fitBounds(L.featureGroup(layers).getBounds().pad(0.2));
             }
+
+            // Pastikan ukuran peta benar setelah layout & ikut menyesuaikan saat browser di-resize
+            setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
+            window.addEventListener('resize', onResize);
         };
 
         initMap();
 
         return () => {
             cancelled = true;
+            window.removeEventListener('resize', onResize);
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
@@ -109,9 +115,9 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
         <AuthenticatedLayout title="Peta Risiko Lahan" currentRoute="peta-risiko.index">
             <Head title="Peta Risiko Lahan" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="h-full flex flex-col py-6 px-4 sm:px-6 lg:px-8">
+                <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 shrink-0">
                         <div>
                             <h1 className="text-2xl font-bold text-[#1e293b]">Peta Risiko Lahan</h1>
                             <p className="text-sm text-[#64748b]">
@@ -147,11 +153,11 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
                             </Link>
                         </div>
                     ) : (
-                        <div className="relative">
+                        <div className="relative flex-1 min-h-0">
                             <div
                                 ref={mapRef}
                                 dusk="peta-risiko-map"
-                                className="h-[600px] w-full rounded-2xl overflow-hidden border border-[#e2e8f0] z-0"
+                                className="h-full w-full rounded-2xl overflow-hidden border border-[#e2e8f0] z-0"
                             />
 
                             {/* Legenda */}
