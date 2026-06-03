@@ -15,6 +15,8 @@ const LEGEND_ORDER = ['tinggi', 'sedang', 'rendah', 'belum'];
 const escapeHtml = (s) =>
     String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+const dimColor = (s) => (s > 70 ? '#ef4444' : s > 40 ? '#f59e0b' : '#22c55e');
+
 export default function PetaRisiko({ areas = [], riskSummary = {} }) {
     const mapRef         = useRef(null);
     const mapInstanceRef = useRef(null);
@@ -63,17 +65,39 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
                     style: { color: meta.color, weight: 2, fillColor: meta.color, fillOpacity: 0.45 },
                 });
 
-                const link = area.observation_id
-                    ? `<a href="/analisis-risiko/${area.observation_id}" style="color:#2D5A27;font-weight:600">Lihat analisis &rarr;</a>`
-                    : `<span style="color:#94a3b8">Belum ada observasi</span>`;
+                // Rincian 3 dimensi risiko (kekeringan / genangan / penyakit)
+                const dims = (area.dimensions || []).map((d) =>
+                    `<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:12px;margin:2px 0">
+                        <span style="color:#475569">
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${dimColor(d.score)};margin-right:5px"></span>${escapeHtml(d.label)}
+                        </span>
+                        <b style="color:#1e293b">${d.score}</b>
+                    </div>`
+                ).join('');
+
+                // Tanggal observasi terbaru (+ tanda data lama)
+                const dateLine = area.observation_date
+                    ? `<div style="font-size:11px;color:${area.is_stale ? '#ef4444' : '#94a3b8'};margin-top:4px">
+                          Observasi: ${escapeHtml(area.observation_date)} (${escapeHtml(area.observation_ago)})${area.is_stale ? ' &middot; data lama' : ''}
+                       </div>`
+                    : '';
+
+                // Tindakan: analisis + rekomendasi (atau ajakan input bila belum ada observasi)
+                const links = area.observation_id
+                    ? `<div style="display:flex;gap:12px;margin-top:6px">
+                          <a href="/analisis-risiko/${area.observation_id}" style="color:#2D5A27;font-weight:600">Analisis</a>
+                          <a href="/rekomendasi-tindakan/${area.observation_id}" style="color:#2D5A27;font-weight:600">Rekomendasi</a>
+                       </div>`
+                    : `<a href="/input-kondisi" style="color:#2D5A27;font-weight:600">Catat kondisi lahan &rarr;</a>`;
 
                 layer.bindTooltip(escapeHtml(area.name), { sticky: true });
                 layer.bindPopup(
-                    `<div style="min-width:170px;line-height:1.5">
-                        <strong>${escapeHtml(area.name)}</strong><br/>
-                        Risiko: <b style="color:${meta.color}">${meta.label}</b><br/>
-                        ${area.score !== null && area.score !== undefined ? `Skor: ${area.score}/100<br/>` : ''}
-                        ${link}
+                    `<div style="min-width:210px;line-height:1.5">
+                        <strong style="font-size:14px">${escapeHtml(area.name)}</strong><br/>
+                        <span>Risiko: <b style="color:${meta.color}">${meta.label}</b>${area.score !== null && area.score !== undefined ? ` (${area.score}/100)` : ''}</span>
+                        ${dims ? `<div style="margin:6px 0;padding-top:6px;border-top:1px solid #f1f5f9">${dims}</div>` : '<br/>'}
+                        ${dateLine}
+                        ${links}
                     </div>`
                 );
 

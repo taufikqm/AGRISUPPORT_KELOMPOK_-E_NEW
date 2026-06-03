@@ -63,6 +63,8 @@ class RiskMapTest extends TestCase
                 ->component('PetaRisiko')
                 ->where('areas.0.risk_level', 'tinggi')
                 ->where('areas.0.color', '#ef4444')
+                ->has('areas.0.dimensions', 3)
+                ->has('areas.0.observation_date')
             );
     }
 

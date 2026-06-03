@@ -40,14 +40,29 @@ class RiskMapController extends Controller
                 ->orderByDesc('id')
                 ->first();
 
-            $score  = null;
-            $status = null;
-            $level  = null;
+            $score      = null;
+            $status     = null;
+            $level      = null;
+            $dimensions = [];
+            $obsDate    = null;
+            $obsAgo     = null;
+            $isStale    = false;
 
             if ($latestObs) {
-                $score  = $this->riskService->calculateRiskMetrics($latestObs)['overall'];
-                $status = $this->riskService->statusFromOverall($score);
-                $level  = $this->levelFromScore($score);
+                $metrics = $this->riskService->calculateRiskMetrics($latestObs);
+                $score   = $metrics['overall'];
+                $status  = $this->riskService->statusFromOverall($score);
+                $level   = $this->levelFromScore($score);
+
+                $dimensions = [
+                    ['label' => 'Kekeringan', 'score' => (int) round($metrics['drought'])],
+                    ['label' => 'Genangan',   'score' => (int) round($metrics['puddle'])],
+                    ['label' => 'Penyakit',   'score' => (int) round($metrics['disease'])],
+                ];
+
+                $obsDate = $latestObs->observation_date?->locale('id')->translatedFormat('d M Y');
+                $obsAgo  = $latestObs->observation_date?->locale('id')->diffForHumans();
+                $isStale = $latestObs->observation_date?->lt(now()->subDays(14)) ?? false;
             }
 
             $summary[$level ?? 'belum']++;
@@ -62,12 +77,16 @@ class RiskMapController extends Controller
                 'lat'            => $area->latitude !== null ? (float) $area->latitude : null,
                 'lon'            => $area->longitude !== null ? (float) $area->longitude : null,
                 'geojson'        => $area->geojson ? json_decode($area->geojson) : null,
-                'observation_id' => $latestObs?->id,
-                'risk_level'     => $level,                       // tinggi|sedang|rendah|null
-                'risk_label'     => $meta['label'],
-                'color'          => $meta['color'],
-                'score'          => $score !== null ? (int) round($score) : null,
-                'status'         => $status,                      // Aman|Waspada|Bahaya|Kritis|null
+                'observation_id'   => $latestObs?->id,
+                'observation_date' => $obsDate,                     // "18 Mei 2026" | null
+                'observation_ago'  => $obsAgo,                      // "2 minggu yang lalu" | null
+                'is_stale'         => $isStale,                     // observasi > 14 hari
+                'risk_level'       => $level,                       // tinggi|sedang|rendah|null
+                'risk_label'       => $meta['label'],
+                'color'            => $meta['color'],
+                'score'            => $score !== null ? (int) round($score) : null,
+                'status'           => $status,                      // Aman|Waspada|Bahaya|Kritis|null
+                'dimensions'       => $dimensions,                  // [{label, score} x3] | []
             ];
         });
 
