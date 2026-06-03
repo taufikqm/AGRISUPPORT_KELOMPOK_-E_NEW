@@ -24,6 +24,16 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
     const areasWithGeom = areas.filter((a) => a.geojson);
     const summary = { tinggi: 0, sedang: 0, rendah: 0, belum: 0, ...riskSummary };
 
+    // Lahan paling berisiko (untuk fokus default peta): level tertinggi, lalu skor terbesar.
+    const RISK_RANK = { tinggi: 3, sedang: 2, rendah: 1 };
+    const focusArea = areasWithGeom.length
+        ? [...areasWithGeom].sort(
+              (a, b) =>
+                  (RISK_RANK[b.risk_level] ?? 0) - (RISK_RANK[a.risk_level] ?? 0) ||
+                  (b.score ?? -1) - (a.score ?? -1)
+          )[0]
+        : null;
+
     useEffect(() => {
         if (!mapRef.current || areas.length === 0) return;
         let cancelled = false;
@@ -71,9 +81,16 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
                 layersRef.current[area.id] = layer;
             });
 
-            const layers = Object.values(layersRef.current);
-            if (layers.length) {
-                map.fitBounds(L.featureGroup(layers).getBounds().pad(0.2));
+            // Default: fokus ke lahan paling berisiko agar tampilan dekat & enak dilihat.
+            // Semua lahan tetap ter-render (bisa di-zoom-out atau dipilih dari dropdown).
+            const focusLayer = focusArea ? layersRef.current[focusArea.id] : null;
+            if (focusLayer) {
+                map.fitBounds(focusLayer.getBounds().pad(0.5), { maxZoom: 15 });
+            } else {
+                const layers = Object.values(layersRef.current);
+                if (layers.length) {
+                    map.fitBounds(L.featureGroup(layers).getBounds().pad(0.2), { maxZoom: 13 });
+                }
             }
 
             // Pastikan ukuran peta benar setelah layout & ikut menyesuaikan saat browser di-resize
@@ -96,10 +113,19 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
 
     const handleSelectArea = (id) => {
         setSelectedArea(id);
-        if (!id) return;
+        const map = mapInstanceRef.current;
+        if (!map) return;
+
+        // "Semua Lahan" → kembali fokus ke lahan paling berisiko
+        if (!id) {
+            const focusLayer = focusArea ? layersRef.current[focusArea.id] : null;
+            if (focusLayer) map.flyToBounds(focusLayer.getBounds().pad(0.5), { maxZoom: 15 });
+            return;
+        }
+
         const layer = layersRef.current[id];
-        if (layer && mapInstanceRef.current) {
-            mapInstanceRef.current.flyToBounds(layer.getBounds().pad(0.4));
+        if (layer) {
+            map.flyToBounds(layer.getBounds().pad(0.4));
             layer.openPopup();
         }
     };
