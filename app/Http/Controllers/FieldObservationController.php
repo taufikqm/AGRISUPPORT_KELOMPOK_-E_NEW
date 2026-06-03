@@ -251,6 +251,14 @@ class FieldObservationController extends Controller
         Cache::forget("weather_alerts_{$userId}");
         Cache::forget("latest_obs_{$userId}");
 
+        // Picu notifikasi otomatis (cuaca ekstrem, risiko meningkat, rekomendasi baru).
+        // Dibungkus try/catch agar kegagalan notifikasi tidak pernah menggagalkan simpan observasi.
+        try {
+            app(\App\Services\NotificationTriggerService::class)->afterObservation($observation);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return redirect()->route('validasi-observasi.show', $observation);
     }
 

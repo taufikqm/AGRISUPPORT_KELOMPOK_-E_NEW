@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 /**
  * Bell icon + badge unread + dropdown panel notifikasi (AGS-87).
@@ -26,7 +26,21 @@ export default function NotificationBell() {
         }
     }, []);
 
-    useEffect(() => { fetchSummary(); }, [fetchSummary]);
+    useEffect(() => {
+        fetchSummary();
+
+        // Update badge saat aksi Inertia berhasil (tandai dibaca, pindah halaman, dll.)
+        const stopInertia = router.on('success', () => fetchSummary());
+
+        // Polling setiap 30 detik — menangkap trigger dari luar browser
+        // (artisan command, scheduler) tanpa perlu refresh manual.
+        const interval = setInterval(fetchSummary, 30_000);
+
+        return () => {
+            stopInertia();
+            clearInterval(interval);
+        };
+    }, [fetchSummary]);
 
     return (
         <div className="relative">
