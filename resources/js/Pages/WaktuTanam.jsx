@@ -20,6 +20,26 @@ function confColor(score) {
     return '#ef4444';
 }
 
+function ConfidenceRing({ score, label, color }) {
+    const radius = 32;
+    const circ = 2 * Math.PI * radius;
+    const offset = circ - (Math.max(0, Math.min(100, score)) / 100) * circ;
+    return (
+        <div className="flex flex-col items-center">
+            <div className="relative w-[88px] h-[88px]">
+                <svg width="88" height="88" className="-rotate-90">
+                    <circle cx="44" cy="44" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="7" />
+                    <circle cx="44" cy="44" r={radius} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xl font-extrabold" style={{ color }}>{score}%</span>
+                </div>
+            </div>
+            <span className="text-xs font-bold mt-1" style={{ color }}>{label}</span>
+        </div>
+    );
+}
+
 export default function WaktuTanam({ areas = [] }) {
     const [areaId, setAreaId]   = useState(areas[0]?.id ?? '');
     const [crop, setCrop]       = useState('padi');
@@ -124,26 +144,38 @@ export default function WaktuTanam({ areas = [] }) {
                         {!loading && !error && p && (
                             <div className="space-y-3">
                                 {/* Kartu jendela tanam */}
-                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5" style={{ borderTopWidth: 4, borderTopColor: confColor(p.confidence_score) }}>
-                                    <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wide mb-2">Jendela Tanam Terbaik</p>
-                                    <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
-                                        <div>
-                                            <p className="text-xs text-[#94a3b8]">Mulai Tanam</p>
-                                            <p className="text-xl font-bold text-[#1e293b]">{p.start_label}</p>
+                                <div className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white p-6">
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <div className="w-9 h-9 rounded-xl bg-emerald-600/10 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-emerald-700" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                            </svg>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-[#94a3b8]">Batas Ideal</p>
-                                            <p className="text-xl font-bold text-[#1e293b]">{p.end_label}</p>
+                                        <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Jendela Tanam Terbaik</p>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-white rounded-2xl border border-emerald-100 px-5 py-3 text-center shadow-sm">
+                                                <p className="text-[10px] uppercase tracking-wide text-slate-400 font-bold">Mulai Tanam</p>
+                                                <p className="text-xl font-bold text-slate-800 mt-0.5">{p.start_label}</p>
+                                            </div>
+                                            <svg className="w-6 h-6 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                            </svg>
+                                            <div className="bg-white rounded-2xl border border-emerald-100 px-5 py-3 text-center shadow-sm">
+                                                <p className="text-[10px] uppercase tracking-wide text-slate-400 font-bold">Batas Ideal</p>
+                                                <p className="text-xl font-bold text-slate-800 mt-0.5">{p.end_label}</p>
+                                            </div>
                                         </div>
-                                        <div className="ml-auto text-right">
-                                            <p className="text-xs text-[#94a3b8]">Tingkat Kepercayaan</p>
-                                            <p className="text-2xl font-bold" style={{ color: confColor(p.confidence_score) }}>
-                                                {p.confidence_score}% <span className="text-sm font-semibold">· {p.confidence_label}</span>
-                                            </p>
+
+                                        <div className="ml-auto">
+                                            <ConfidenceRing score={p.confidence_score} label={p.confidence_label} color={confColor(p.confidence_score)} />
                                         </div>
                                     </div>
+
                                     {p.limited_data && (
-                                        <p className="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                        <p className="mt-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                                             Data historis terbatas — gunakan rekomendasi ini sebagai panduan awal.
                                         </p>
                                     )}
@@ -151,23 +183,23 @@ export default function WaktuTanam({ areas = [] }) {
 
                                 {/* Dasar prediksi + Tips (2 kolom) */}
                                 <div className="grid md:grid-cols-2 gap-3">
-                                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4">
-                                        <p className="text-sm font-bold text-[#1e293b] mb-2">Dasar Prediksi</p>
-                                        <ul className="space-y-1.5">
+                                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5">
+                                        <p className="text-sm font-bold text-[#1e293b] mb-3">Dasar Prediksi</p>
+                                        <ul className="space-y-2.5">
                                             {p.basis.map((b, i) => (
-                                                <li key={i} className="flex gap-2 text-xs text-[#475569]">
-                                                    <span className="text-[#2D5A27]">›</span>{b}
+                                                <li key={i} className="flex gap-2.5 text-sm text-[#475569] leading-snug">
+                                                    <span className="text-[#2D5A27] font-bold mt-0.5">›</span><span>{b}</span>
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
 
-                                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4">
-                                        <p className="text-sm font-bold text-[#1e293b] mb-2">Tips Persiapan</p>
-                                        <ul className="space-y-1.5">
+                                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5">
+                                        <p className="text-sm font-bold text-[#1e293b] mb-3">Tips Persiapan</p>
+                                        <ul className="space-y-2.5">
                                             {p.tips.map((t, i) => (
-                                                <li key={i} className="flex gap-2 text-xs text-[#475569]">
-                                                    <span className="text-[#2D5A27]">✓</span>{t}
+                                                <li key={i} className="flex gap-2.5 text-sm text-[#475569] leading-snug">
+                                                    <span className="text-[#2D5A27] font-bold mt-0.5">✓</span><span>{t}</span>
                                                 </li>
                                             ))}
                                         </ul>
