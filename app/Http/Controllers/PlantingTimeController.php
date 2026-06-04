@@ -2,55 +2,85 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActionLog;
 use App\Models\AgriculturalArea;
+use App\Services\PlantingTimeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 /**
- * ============================================================
- * STUB: PlantingTimeController — Modul Waktu Tanam Optimal
- * ============================================================
+ * Prediksi Waktu Tanam Terbaik (AGS-72).
  *
- * TUGAS TIM:
- *   Implementasikan seluruh method di bawah ini sesuai fitur
- *   Rekomendasi Waktu Tanam Optimal pada AgriSupport.
- *
- * FILE TERKAIT YANG PERLU DIISI JUGA:
- *   - resources/js/Pages/WaktuTanam.jsx  (tampilan UI waktu tanam)
- *
- * MODEL YANG DIGUNAKAN:
- *   - App\Models\AgriculturalArea
- *   - App\Models\FieldObservation (untuk data historis)
- *
- * ROUTE YANG TERHUBUNG (routes/web.php):
- *   GET  /waktu-tanam          → index()   : halaman utama waktu tanam
- *   POST /waktu-tanam/analisis → analyze() : proses analisis & kembalikan hasil
- *
- * LOGIKA ANALISIS:
- *   - Ambil data cuaca & observasi historis lahan yang dipilih
- *   - Tentukan rentang waktu tanam optimal berdasarkan pola curah hujan & suhu
- *   - Return hasil analisis ke frontend (bisa via Inertia atau JSON)
- * ============================================================
+ * index()   — halaman + daftar lahan petani.
+ * analyze() — hitung jendela tanam dari cuaca historis (Open-Meteo) lalu kembalikan JSON,
+ *             sekaligus mencatat jadwal ke action_logs (action_type = 'planting_schedule').
  */
 class PlantingTimeController extends Controller
 {
-    /**
-     * TODO: Tampilkan halaman Waktu Tanam Optimal.
-     * Sertakan daftar wilayah lahan milik user untuk dipilih.
-     * Gunakan Inertia::render('WaktuTanam', [...]).
-     */
+    public function __construct(private PlantingTimeService $service) {}
+
     public function index(Request $request)
     {
-        // TODO: Implementasi di sini
+        $areas = AgriculturalArea::where('user_id', $request->user()->id)
+            ->get(['id', 'name', 'location_name']);
+
+        return Inertia::render('WaktuTanam', [
+            'areas' => $areas,
+        ]);
     }
 
-    /**
-     * TODO: Proses analisis waktu tanam optimal berdasarkan lahan yang dipilih.
-     * Terima: agricultural_area_id dari request.
-     * Return: hasil analisis (tanggal/bulan optimal, alasan, dll).
-     */
     public function analyze(Request $request)
     {
-        // TODO: Implementasi di sini
+        $validated = $request->validate([
+            'area_id'   => 'required|exists:agricultural_areas,id',
+            'crop_type' => 'nullable|string|max:50',
+        ]);
+
+        $area = AgriculturalArea::findOrFail($validated['area_id']);
+
+        if ($area->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        // Koordinat centroid lahan dari PostGIS.
+        $centroid = DB::selectOne(
+            'SELECT ST_Y(ST_Centroid(geometry)) AS lat, ST_X(ST_Centroid(geometry)) AS lon
+             FROM agricultural_areas WHERE id = ?',
+            [$area->id]
+        );
+
+        if (! $centroid || $centroid->lat === null || $centroid->lon === null) {
+            return response()->json([
+                'message'  => 'Lahan ini belum memiliki lokasi peta. Lengkapi dulu di menu Wilayah Lahan.',
+                'redirect' => route('wilayah-lahan.index'),
+            ], 422);
+        }
+
+        $cropType   = $validated['crop_type'] ?? 'padi';
+        $prediction = $this->service->predict((float) $centroid->lat, (float) $centroid->lon, $cropType);
+
+        // Catat jadwal tanam (dedup per lahan agar klik berulang tidak menduplikasi).
+        ActionLog::firstOrCreate(
+            [
+                'user_id'              => $request->user()->id,
+                'agricultural_area_id' => $area->id,
+                'action_type'          => 'planting_schedule',
+            ],
+            [
+                'observation_id'    => null,
+                'recommendation_id' => null,
+                'performed_at'      => now(),
+            ]
+        );
+
+        return response()->json([
+            'area' => [
+                'id'       => $area->id,
+                'name'     => $area->name,
+                'location' => $area->location_name,
+            ],
+            'prediction' => $prediction,
+        ]);
     }
 }
