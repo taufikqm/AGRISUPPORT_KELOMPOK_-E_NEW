@@ -1,6 +1,10 @@
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useState, useEffect, useCallback } from 'react';
+import {
+    LuLeaf, LuDroplets, LuThermometer, LuWheat, LuCalendarDays, LuShieldCheck,
+    LuClipboardList, LuSparkles, LuCheck, LuArrowRight, LuSprout,
+} from 'react-icons/lu';
 
 const CROPS = [
     { value: 'padi',    label: 'Padi' },
@@ -13,27 +17,6 @@ const CROP_LABEL = { padi: 'Padi', jagung: 'Jagung', kedelai: 'Kedelai' };
 function csrfToken() {
     const m = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
     return m ? decodeURIComponent(m[1]) : '';
-}
-
-/* Ikon garis tipis ala desain Figma (stroke currentColor). */
-const Icon = {
-    leaf: 'M2.25 21A12 12 0 0 1 14.25 9h2.25v2.25A12 12 0 0 1 4.5 23.25H2.25V21Zm0 0 9.75-9.75',
-    drop: 'M12 2.25c3.5 4 6 7.2 6 10.5a6 6 0 0 1-12 0c0-3.3 2.5-6.5 6-10.5Z',
-    sun:  'M12 3v2.25m0 13.5V21m9-9h-2.25M5.25 12H3m14.83-6.36-1.59 1.59M7.76 16.24l-1.59 1.59m12.66 0-1.59-1.59M7.76 7.76 6.17 6.17M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z',
-    shield: 'M12 2.25 4.5 5.25v6c0 4.5 3 8.4 7.5 10.5 4.5-2.1 7.5-6 7.5-10.5v-6L12 2.25Z',
-    calendar: 'M8 2.75v3M16 2.75v3M3.5 9.5h17M5.25 5h13.5A1.75 1.75 0 0 1 20.5 6.75v12.5A1.75 1.75 0 0 1 18.75 21H5.25A1.75 1.75 0 0 1 3.5 19.25V6.75A1.75 1.75 0 0 1 5.25 5Z',
-    shieldCheck: 'M12 2.75 5 5.5v5.25c0 4.2 2.9 7.85 7 9.25 4.1-1.4 7-5.05 7-9.25V5.5L12 2.75ZM9 11.5l2 2 4-4',
-    clipboard: 'M9 3.75H7.5A2.25 2.25 0 0 0 5.25 6v13.5A2.25 2.25 0 0 0 7.5 21.75h9a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 16.5 3.75H15m-6 0A1.5 1.5 0 0 1 10.5 2.25h3A1.5 1.5 0 0 1 15 3.75m-6 0A1.5 1.5 0 0 0 9 5.25h6V3.75',
-    check: 'M4.5 12.75l6 6 9-13.5',
-    spark: 'M12 3v4.5m0 9V21m9-9h-4.5m-9 0H3m13.5-6.36-3.18 3.18m-4.14 4.14L6 17.66m12 0-3.18-3.18M9.32 9.32 6.14 6.14',
-};
-
-function IconSvg({ d, className = 'w-5 h-5', strokeWidth = 1.7 }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={strokeWidth} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d={d} />
-        </svg>
-    );
 }
 
 function confColor(score) {
@@ -107,8 +90,8 @@ export default function WaktuTanam({ areas = [] }) {
                 {/* ── HERO ─────────────────────────────── */}
                 <div className="grid lg:grid-cols-[1fr_360px] gap-5 items-start">
                     <div>
-                        <span className="inline-flex items-center gap-2 rounded-full bg-[#eef4ef] text-[#2f6b45] text-xs font-bold px-3 py-1.5">
-                            <IconSvg d={Icon.leaf} className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eef4ef] text-[#2f6b45] text-xs font-bold px-3 py-1.5">
+                            <LuSprout className="w-3.5 h-3.5" />
                             DSS Waktu Tanam
                         </span>
                         <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold leading-tight text-[#18231d] max-w-xl">
@@ -122,8 +105,8 @@ export default function WaktuTanam({ areas = [] }) {
 
                     {/* Panel lahan aktif (filter) */}
                     <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 shadow-sm">
-                        <p className="flex items-center gap-2 text-xs font-bold text-[#2f6b45] uppercase tracking-wide mb-3">
-                            <IconSvg d={Icon.leaf} className="w-3.5 h-3.5" /> Lahan aktif
+                        <p className="flex items-center gap-1.5 text-xs font-bold text-[#2f6b45] uppercase tracking-wide mb-3">
+                            <LuLeaf className="w-3.5 h-3.5" /> Lahan aktif
                         </p>
 
                         {areas.length === 0 ? (
@@ -187,9 +170,7 @@ export default function WaktuTanam({ areas = [] }) {
                                 {/* Panel hijau — jendela tanam */}
                                 <div className="relative bg-[#2f6b45] p-6 text-white overflow-hidden">
                                     <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/10" />
-                                    <div className="absolute right-6 bottom-6 text-white/10">
-                                        <IconSvg d={Icon.leaf} className="w-28 h-28" strokeWidth={1} />
-                                    </div>
+                                    <LuLeaf className="absolute right-5 bottom-4 w-28 h-28 text-white/10" strokeWidth={1} />
                                     <div className="relative">
                                         <span className="inline-block rounded-full bg-white/20 text-xs font-semibold px-2.5 py-0.5">Siap disiapkan</span>
                                         <p className="mt-4 text-sm font-semibold text-white/75">Rekomendasi jendela tanam</p>
@@ -202,12 +183,12 @@ export default function WaktuTanam({ areas = [] }) {
 
                                         <div className="mt-6 flex gap-3">
                                             <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <IconSvg d={Icon.calendar} className="w-5 h-5 text-white/80" />
+                                                <LuCalendarDays className="w-5 h-5 text-white/80" />
                                                 <p className="mt-2 text-xs text-white/70">Mulai ideal</p>
                                                 <p className="text-xl font-extrabold">{start.day} {start.rest.split(' ')[0]}</p>
                                             </div>
                                             <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <IconSvg d={Icon.shieldCheck} className="w-5 h-5 text-white/80" />
+                                                <LuShieldCheck className="w-5 h-5 text-white/80" />
                                                 <p className="mt-2 text-xs text-white/70">Batas aman</p>
                                                 <p className="text-xl font-extrabold">{end.day} {end.rest.split(' ')[0]}</p>
                                             </div>
@@ -221,7 +202,7 @@ export default function WaktuTanam({ areas = [] }) {
                                         <div>
                                             <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#68766e]">Kepercayaan DSS</p>
                                             <div className="flex items-end gap-2 mt-1">
-                                                <span className="text-5xl font-extrabold text-[#18231d] leading-none" style={{ color: cc }}>{p.confidence_score}%</span>
+                                                <span className="text-5xl font-extrabold leading-none" style={{ color: cc }}>{p.confidence_score}%</span>
                                                 <span className="text-sm font-bold text-[#2f6b45] mb-1">{p.confidence_label}</span>
                                             </div>
                                         </div>
@@ -233,10 +214,10 @@ export default function WaktuTanam({ areas = [] }) {
 
                                     {/* Grid metrik 2×2 */}
                                     <div className="mt-5 grid grid-cols-2 gap-3">
-                                        <Metric icon={Icon.drop}   label="Curah hujan" value={p.climate ? `${p.climate.rain} mm/hari` : '—'} />
-                                        <Metric icon={Icon.sun}    label="Suhu"        value={p.climate ? `${p.climate.temp}°C` : '—'} />
-                                        <Metric icon={Icon.leaf}   label="Kecocokan"   value={p.match_label || '—'} />
-                                        <Metric icon={Icon.shield} label="Komoditas"   value={CROP_LABEL[p.crop_type] || p.crop_type} />
+                                        <Metric Icon={LuDroplets}    label="Curah hujan" value={p.climate ? `${p.climate.rain} mm/hari` : '—'} />
+                                        <Metric Icon={LuThermometer} label="Suhu"        value={p.climate ? `${p.climate.temp}°C` : '—'} />
+                                        <Metric Icon={LuLeaf}        label="Kecocokan"   value={p.match_label || '—'} />
+                                        <Metric Icon={LuWheat}       label="Komoditas"   value={CROP_LABEL[p.crop_type] || p.crop_type} />
                                     </div>
 
                                     {/* Arahan hari ini */}
@@ -259,7 +240,7 @@ export default function WaktuTanam({ areas = [] }) {
                             <div className="space-y-5">
                                 <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 shadow-sm">
                                     <p className="flex items-center gap-2 text-sm font-extrabold text-[#18231d] mb-4">
-                                        <span className="text-[#2f6b45]"><IconSvg d={Icon.clipboard} /></span> Rencana persiapan
+                                        <LuClipboardList className="w-5 h-5 text-[#2f6b45]" /> Rencana persiapan
                                     </p>
                                     <ol className="space-y-4">
                                         {p.tips.map((t, i) => (
@@ -273,12 +254,12 @@ export default function WaktuTanam({ areas = [] }) {
 
                                 <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 shadow-sm">
                                     <p className="flex items-center gap-2 text-sm font-extrabold text-[#18231d] mb-4">
-                                        <span className="text-[#2f6b45]"><IconSvg d={Icon.spark} /></span> Dasar prediksi
+                                        <LuSparkles className="w-5 h-5 text-[#2f6b45]" /> Dasar prediksi
                                     </p>
                                     <ul className="space-y-3">
                                         {p.basis.map((b, i) => (
                                             <li key={i} className="flex gap-2.5 text-sm text-[#475569] leading-snug">
-                                                <span className="text-[#28a75a] mt-0.5 shrink-0"><IconSvg d={Icon.check} className="w-4 h-4" strokeWidth={2.2} /></span>
+                                                <LuCheck className="w-4 h-4 text-[#28a75a] mt-0.5 shrink-0" strokeWidth={3} />
                                                 <span>{b}</span>
                                             </li>
                                         ))}
@@ -294,7 +275,7 @@ export default function WaktuTanam({ areas = [] }) {
                             className="w-full inline-flex items-center justify-center gap-2 text-sm font-bold px-5 py-3.5 rounded-2xl bg-[#2f6b45] text-white hover:bg-[#255838] transition-colors shadow-sm"
                         >
                             {saved ? '✓ Jadwal tanam tercatat' : 'Gunakan rekomendasi ini'}
-                            {!saved && <IconSvg d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" className="w-4 h-4" strokeWidth={2} />}
+                            {!saved && <LuArrowRight className="w-4 h-4" />}
                         </button>
                     </>
                 )}
@@ -303,10 +284,10 @@ export default function WaktuTanam({ areas = [] }) {
     );
 }
 
-function Metric({ icon, label, value }) {
+function Metric({ Icon, label, value }) {
     return (
         <div className="rounded-2xl bg-[#eef4ef]/40 border border-[#dde8e0] p-3.5">
-            <span className="text-[#2f6b45]"><IconSvg d={icon} className="w-5 h-5" /></span>
+            <Icon className="w-5 h-5 text-[#2f6b45]" />
             <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-[#68766e]">{label}</p>
             <p className="text-[15px] font-extrabold text-[#18231d] leading-tight mt-0.5">{value}</p>
         </div>
