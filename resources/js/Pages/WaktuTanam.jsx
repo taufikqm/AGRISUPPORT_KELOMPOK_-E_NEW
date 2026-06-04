@@ -69,10 +69,10 @@ export default function WaktuTanam({ areas = [] }) {
         <AuthenticatedLayout title="Prediksi Waktu Tanam" currentRoute="waktu-tanam.index">
             <Head title="Prediksi Waktu Tanam" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-[#1e293b]">Prediksi Waktu Tanam</h1>
-                    <p className="text-sm text-[#64748b]">Rekomendasi jendela tanam terbaik dari pola cuaca historis lahan Anda.</p>
+            <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
+                <div className="mb-4">
+                    <h1 className="text-xl font-bold text-[#1e293b]">Prediksi Waktu Tanam</h1>
+                    <p className="text-xs text-[#64748b]">Rekomendasi jendela tanam terbaik dari pola cuaca historis lahan Anda.</p>
                 </div>
 
                 {areas.length === 0 ? (
@@ -83,7 +83,7 @@ export default function WaktuTanam({ areas = [] }) {
                 ) : (
                     <>
                         {/* Filter lahan + komoditas */}
-                        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 flex flex-wrap gap-3 mb-5">
+                        <div className="bg-white border border-[#e2e8f0] rounded-2xl p-3 flex flex-wrap gap-3 mb-3">
                             <div className="flex-1 min-w-[160px]">
                                 <label className="block text-xs font-semibold text-[#64748b] mb-1">Lahan</label>
                                 <select
@@ -122,9 +122,9 @@ export default function WaktuTanam({ areas = [] }) {
                         )}
 
                         {!loading && !error && p && (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {/* Kartu jendela tanam */}
-                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6" style={{ borderTopWidth: 4, borderTopColor: confColor(p.confidence_score) }}>
+                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5" style={{ borderTopWidth: 4, borderTopColor: confColor(p.confidence_score) }}>
                                     <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wide mb-2">Jendela Tanam Terbaik</p>
                                     <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
                                         <div>
@@ -149,34 +149,35 @@ export default function WaktuTanam({ areas = [] }) {
                                     )}
                                 </div>
 
-                                {/* Dasar prediksi */}
-                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6">
-                                    <p className="text-sm font-bold text-[#1e293b] mb-3">Dasar Prediksi</p>
-                                    <ul className="space-y-2">
-                                        {p.basis.map((b, i) => (
-                                            <li key={i} className="flex gap-2 text-sm text-[#475569]">
-                                                <span className="text-[#2D5A27] mt-0.5">›</span>{b}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                                {/* Dasar prediksi + Tips (2 kolom) */}
+                                <div className="grid md:grid-cols-2 gap-3">
+                                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4">
+                                        <p className="text-sm font-bold text-[#1e293b] mb-2">Dasar Prediksi</p>
+                                        <ul className="space-y-1.5">
+                                            {p.basis.map((b, i) => (
+                                                <li key={i} className="flex gap-2 text-xs text-[#475569]">
+                                                    <span className="text-[#2D5A27]">›</span>{b}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
 
-                                {/* Tips */}
-                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6">
-                                    <p className="text-sm font-bold text-[#1e293b] mb-3">Tips Persiapan</p>
-                                    <ul className="space-y-2">
-                                        {p.tips.map((t, i) => (
-                                            <li key={i} className="flex gap-2 text-sm text-[#475569]">
-                                                <span className="text-[#2D5A27] mt-0.5">✓</span>{t}
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4">
+                                        <p className="text-sm font-bold text-[#1e293b] mb-2">Tips Persiapan</p>
+                                        <ul className="space-y-1.5">
+                                            {p.tips.map((t, i) => (
+                                                <li key={i} className="flex gap-2 text-xs text-[#475569]">
+                                                    <span className="text-[#2D5A27]">✓</span>{t}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 <button
                                     dusk="btn-gunakan-rekomendasi"
                                     onClick={() => { analyze(areaId, crop); setSaved(true); }}
-                                    className="w-full text-sm font-semibold px-5 py-3 rounded-xl bg-[#2D5A27] text-white hover:bg-[#244a20]"
+                                    className="w-full text-sm font-semibold px-5 py-2.5 rounded-xl bg-[#2D5A27] text-white hover:bg-[#244a20]"
                                 >
                                     {saved ? '✓ Jadwal tanam tercatat' : 'Gunakan Rekomendasi Ini'}
                                 </button>
