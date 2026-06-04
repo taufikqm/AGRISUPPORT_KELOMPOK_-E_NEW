@@ -85,21 +85,20 @@ export default function WaktuTanam({ areas = [] }) {
         <AuthenticatedLayout title="Prediksi Waktu Tanam" currentRoute="waktu-tanam.index">
             <Head title="Prediksi Waktu Tanam" />
 
-            <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full space-y-4">
+            <div className="py-5 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full space-y-3.5">
 
                 {/* ── HERO ─────────────────────────────── */}
-                <div className="grid lg:grid-cols-[1fr_340px] gap-5 items-center">
+                <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-center">
                     <div>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eef4ef] text-[#2f6b45] text-xs font-bold px-3 py-1.5">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eef4ef] text-[#2f6b45] text-[11px] font-bold px-2.5 py-1">
                             <LuSprout className="w-3.5 h-3.5" />
                             DSS Waktu Tanam
                         </span>
-                        <h1 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-[#18231d] max-w-xl">
+                        <h1 className="mt-2 text-xl sm:text-2xl font-extrabold leading-tight text-[#18231d] max-w-xl">
                             Pilih lahan, lihat jendela tanam yang paling aman.
                         </h1>
-                        <p className="mt-2 text-sm text-[#68766e] max-w-xl leading-relaxed">
-                            Prediksi fokus pada keputusan inti petani: kapan mulai tanam berdasarkan
-                            pola curah hujan, suhu, dan risiko cuaca dari data historis lahan Anda.
+                        <p className="mt-1.5 text-[13px] text-[#68766e] max-w-xl leading-relaxed">
+                            Kapan mulai tanam berdasarkan pola curah hujan, suhu, dan risiko cuaca dari data historis lahan Anda.
                         </p>
                     </div>
 
@@ -158,58 +157,54 @@ export default function WaktuTanam({ areas = [] }) {
                 {!loading && !error && p && (
                     <>
                         {/* ── PREDIKSI + PERSIAPAN ──────────── */}
-                        <div className="grid lg:grid-cols-[1fr_360px] gap-5 items-start">
+                        <div className="grid lg:grid-cols-[1fr_340px] gap-4 items-start">
 
                             {/* Kartu utama: panel hijau + panel kepercayaan */}
                             <div className="rounded-[20px] border border-[#2f6b45]/10 bg-white shadow-[0_20px_25px_-5px_rgba(47,107,69,0.05)] overflow-hidden grid md:grid-cols-2">
 
                                 {/* Panel hijau — jendela tanam */}
-                                <div className="relative bg-[#2f6b45] p-6 text-white overflow-hidden">
-                                    <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/10" />
-                                    <LuLeaf className="absolute right-5 bottom-4 w-28 h-28 text-white/10" strokeWidth={1} />
+                                <div className="relative bg-[#2f6b45] p-5 text-white overflow-hidden flex flex-col">
+                                    <div className="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-white/10" />
+                                    <LuLeaf className="absolute right-4 bottom-3 w-24 h-24 text-white/10" strokeWidth={1} />
                                     <div className="relative">
                                         <span className="inline-block rounded-full bg-white/20 text-xs font-semibold px-2.5 py-0.5">Siap disiapkan</span>
-                                        <p className="mt-4 text-sm font-semibold text-white/75">Rekomendasi jendela tanam</p>
+                                        <p className="mt-3 text-sm font-semibold text-white/75">Rekomendasi jendela tanam</p>
                                         <div className="mt-1 flex items-baseline gap-2.5 flex-wrap">
-                                            <p className="text-[34px] leading-none font-extrabold tracking-tight">
+                                            <p className="text-[30px] leading-none font-extrabold tracking-tight">
                                                 {start.day}<span className="px-2 text-white/70">–</span>{end.day}
                                             </p>
                                             <p className="text-lg font-bold text-white/90">{end.rest}</p>
                                         </div>
+                                    </div>
 
-                                        <div className="mt-6 flex gap-3">
-                                            <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <LuCalendarDays className="w-5 h-5 text-white/80" />
-                                                <p className="mt-2 text-xs text-white/70">Mulai ideal</p>
-                                                <p className="text-xl font-extrabold">{start.day} {start.rest.split(' ')[0]}</p>
-                                            </div>
-                                            <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <LuShieldCheck className="w-5 h-5 text-white/80" />
-                                                <p className="mt-2 text-xs text-white/70">Batas aman</p>
-                                                <p className="text-xl font-extrabold">{end.day} {end.rest.split(' ')[0]}</p>
-                                            </div>
+                                    <div className="relative mt-auto pt-5 flex gap-3">
+                                        <div className="flex-1 rounded-2xl bg-white/12 p-3.5">
+                                            <LuCalendarDays className="w-5 h-5 text-white/80" />
+                                            <p className="mt-1.5 text-xs text-white/70">Mulai ideal</p>
+                                            <p className="text-lg font-extrabold">{start.day} {start.rest.split(' ')[0]}</p>
+                                        </div>
+                                        <div className="flex-1 rounded-2xl bg-white/12 p-3.5">
+                                            <LuShieldCheck className="w-5 h-5 text-white/80" />
+                                            <p className="mt-1.5 text-xs text-white/70">Batas aman</p>
+                                            <p className="text-lg font-extrabold">{end.day} {end.rest.split(' ')[0]}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Panel putih — kepercayaan & metrik */}
-                                <div className="p-6">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#68766e]">Kepercayaan DSS</p>
-                                            <div className="flex items-end gap-2 mt-1">
-                                                <span className="text-5xl font-extrabold leading-none" style={{ color: cc }}>{p.confidence_score}%</span>
-                                                <span className="text-sm font-bold text-[#2f6b45] mb-1">{p.confidence_label}</span>
-                                            </div>
-                                        </div>
+                                <div className="p-5">
+                                    <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#68766e]">Kepercayaan DSS</p>
+                                    <div className="flex items-end gap-2 mt-0.5">
+                                        <span className="text-4xl font-extrabold leading-none" style={{ color: cc }}>{p.confidence_score}%</span>
+                                        <span className="text-sm font-bold text-[#2f6b45] mb-0.5">{p.confidence_label}</span>
                                     </div>
 
-                                    <div className="mt-4 h-3 w-full rounded-full bg-[#eef4ef] overflow-hidden">
+                                    <div className="mt-3 h-2.5 w-full rounded-full bg-[#eef4ef] overflow-hidden">
                                         <div className="h-full rounded-full transition-all" style={{ width: `${p.confidence_score}%`, background: cc }} />
                                     </div>
 
                                     {/* Grid metrik 2×2 */}
-                                    <div className="mt-5 grid grid-cols-2 gap-3">
+                                    <div className="mt-4 grid grid-cols-2 gap-2.5">
                                         <Metric Icon={LuDroplets}    label="Curah hujan" value={p.climate ? `${p.climate.rain} mm/hari` : '—'} />
                                         <Metric Icon={LuThermometer} label="Suhu"        value={p.climate ? `${p.climate.temp}°C` : '—'} />
                                         <Metric Icon={LuLeaf}        label="Kecocokan"   value={p.match_label || '—'} />
@@ -217,15 +212,15 @@ export default function WaktuTanam({ areas = [] }) {
                                     </div>
 
                                     {/* Arahan hari ini */}
-                                    <div className="mt-5 rounded-2xl bg-[#ecfdf5] border border-[#a4f4cf] p-4">
+                                    <div className="mt-4 rounded-2xl bg-[#ecfdf5] border border-[#a4f4cf] p-3.5">
                                         <p className="flex items-center gap-2 text-sm font-extrabold text-[#006045]">
                                             <span className="w-2.5 h-2.5 rounded-full bg-[#28a75a]" /> Arahan hari ini
                                         </p>
-                                        <p className="mt-2 text-sm text-[#006045]/90 leading-relaxed">{p.tips[0]}</p>
+                                        <p className="mt-1 text-[13px] text-[#006045]/90 leading-snug">{p.tips[0]}</p>
                                     </div>
 
                                     {p.limited_data && (
-                                        <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                        <p className="mt-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                                             Data historis terbatas — gunakan rekomendasi ini sebagai panduan awal.
                                         </p>
                                     )}
@@ -233,28 +228,28 @@ export default function WaktuTanam({ areas = [] }) {
                             </div>
 
                             {/* Kolom kanan — persiapan + dasar prediksi */}
-                            <div className="space-y-5">
-                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 shadow-sm">
-                                    <p className="flex items-center gap-2 text-sm font-extrabold text-[#18231d] mb-4">
+                            <div className="space-y-4">
+                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 shadow-sm">
+                                    <p className="flex items-center gap-2 text-sm font-extrabold text-[#18231d] mb-3">
                                         <LuClipboardList className="w-5 h-5 text-[#2f6b45]" /> Rencana persiapan
                                     </p>
-                                    <ol className="space-y-4">
+                                    <ol className="space-y-2.5">
                                         {p.tips.map((t, i) => (
-                                            <li key={i} className="flex gap-3">
-                                                <span className="shrink-0 w-9 h-9 rounded-xl bg-[#eef4ef] text-[#2f6b45] text-sm font-extrabold flex items-center justify-center">{i + 1}</span>
-                                                <p className="text-sm text-[#475569] leading-snug pt-1">{t}</p>
+                                            <li key={i} className="flex gap-2.5">
+                                                <span className="shrink-0 w-8 h-8 rounded-lg bg-[#eef4ef] text-[#2f6b45] text-sm font-extrabold flex items-center justify-center">{i + 1}</span>
+                                                <p className="text-[13px] text-[#475569] leading-snug pt-1">{t}</p>
                                             </li>
                                         ))}
                                     </ol>
                                 </div>
 
-                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 shadow-sm">
-                                    <p className="flex items-center gap-2 text-sm font-extrabold text-[#18231d] mb-4">
+                                <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 shadow-sm">
+                                    <p className="flex items-center gap-2 text-sm font-extrabold text-[#18231d] mb-3">
                                         <LuSparkles className="w-5 h-5 text-[#2f6b45]" /> Dasar prediksi
                                     </p>
-                                    <ul className="space-y-3">
+                                    <ul className="space-y-2.5">
                                         {p.basis.map((b, i) => (
-                                            <li key={i} className="flex gap-2.5 text-sm text-[#475569] leading-snug">
+                                            <li key={i} className="flex gap-2.5 text-[13px] text-[#475569] leading-snug">
                                                 <LuCheck className="w-4 h-4 text-[#28a75a] mt-0.5 shrink-0" strokeWidth={3} />
                                                 <span>{b}</span>
                                             </li>
@@ -268,7 +263,7 @@ export default function WaktuTanam({ areas = [] }) {
                         <button
                             dusk="btn-gunakan-rekomendasi"
                             onClick={() => { analyze(areaId, crop); setSaved(true); }}
-                            className="w-full inline-flex items-center justify-center gap-2 text-sm font-bold px-5 py-3.5 rounded-2xl bg-[#2f6b45] text-white hover:bg-[#255838] transition-colors shadow-sm"
+                            className="w-full inline-flex items-center justify-center gap-2 text-sm font-bold px-5 py-3 rounded-2xl bg-[#2f6b45] text-white hover:bg-[#255838] transition-colors shadow-sm"
                         >
                             {saved ? '✓ Jadwal tanam tercatat' : 'Gunakan rekomendasi ini'}
                             {!saved && <LuArrowRight className="w-4 h-4" />}
@@ -282,10 +277,10 @@ export default function WaktuTanam({ areas = [] }) {
 
 function Metric({ Icon, label, value }) {
     return (
-        <div className="rounded-2xl bg-[#eef4ef]/40 border border-[#dde8e0] p-3.5">
+        <div className="rounded-xl bg-[#eef4ef]/40 border border-[#dde8e0] p-3">
             <Icon className="w-5 h-5 text-[#2f6b45]" />
-            <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-[#68766e]">{label}</p>
-            <p className="text-[15px] font-extrabold text-[#18231d] leading-tight mt-0.5">{value}</p>
+            <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wide text-[#68766e]">{label}</p>
+            <p className="text-sm font-extrabold text-[#18231d] leading-tight mt-0.5 truncate">{value}</p>
         </div>
     );
 }
