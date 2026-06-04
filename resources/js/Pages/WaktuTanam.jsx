@@ -21,8 +21,8 @@ const Icon = {
     drop: 'M12 2.25c3.5 4 6 7.2 6 10.5a6 6 0 0 1-12 0c0-3.3 2.5-6.5 6-10.5Z',
     sun:  'M12 3v2.25m0 13.5V21m9-9h-2.25M5.25 12H3m14.83-6.36-1.59 1.59M7.76 16.24l-1.59 1.59m12.66 0-1.59-1.59M7.76 7.76 6.17 6.17M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z',
     shield: 'M12 2.25 4.5 5.25v6c0 4.5 3 8.4 7.5 10.5 4.5-2.1 7.5-6 7.5-10.5v-6L12 2.25Z',
-    calStart: 'M6.75 3v2.25M17.25 3v2.25M3 9h18M5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25Z',
-    flag: 'M3 3v18M3 4.5h12l-1.5 4.5L15 13.5H3',
+    sprout: 'M7 20h10M10 20c5.5-2.5.8-6.4 3-10M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8ZM14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2Z',
+    hourglass: 'M6 2h12M6 22h12M8 2v4.5a3 3 0 0 0 .9 2.1L12 12m0 0 3.1 3.4a3 3 0 0 1 .9 2.1V22M12 12 8.9 15.4a3 3 0 0 0-.9 2.1V22m8-20v4.5a3 3 0 0 1-.9 2.1L12 12',
     clipboard: 'M9 3.75H7.5A2.25 2.25 0 0 0 5.25 6v13.5A2.25 2.25 0 0 0 7.5 21.75h9a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 16.5 3.75H15m-6 0A1.5 1.5 0 0 1 10.5 2.25h3A1.5 1.5 0 0 1 15 3.75m-6 0A1.5 1.5 0 0 0 9 5.25h6V3.75',
     check: 'M4.5 12.75l6 6 9-13.5',
     spark: 'M12 3v4.5m0 9V21m9-9h-4.5m-9 0H3m13.5-6.36-3.18 3.18m-4.14 4.14L6 17.66m12 0-3.18-3.18M9.32 9.32 6.14 6.14',
@@ -193,19 +193,21 @@ export default function WaktuTanam({ areas = [] }) {
                                     <div className="relative">
                                         <span className="inline-block rounded-full bg-white/20 text-xs font-semibold px-2.5 py-0.5">Siap disiapkan</span>
                                         <p className="mt-4 text-sm font-semibold text-white/75">Rekomendasi jendela tanam</p>
-                                        <p className="mt-1 text-[34px] leading-none font-extrabold tracking-tight">
-                                            {start.day}<span className="text-white/80">–</span>{end.day}
-                                        </p>
-                                        <p className="text-lg font-bold text-white/90 mt-1">{end.rest}</p>
+                                        <div className="mt-1 flex items-baseline gap-2.5 flex-wrap">
+                                            <p className="text-[34px] leading-none font-extrabold tracking-tight">
+                                                {start.day}<span className="px-2 text-white/70">–</span>{end.day}
+                                            </p>
+                                            <p className="text-lg font-bold text-white/90">{end.rest}</p>
+                                        </div>
 
                                         <div className="mt-6 flex gap-3">
                                             <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <IconSvg d={Icon.calStart} className="w-4.5 h-4.5 text-white/80" />
+                                                <IconSvg d={Icon.sprout} className="w-5 h-5 text-white/80" />
                                                 <p className="mt-2 text-xs text-white/70">Mulai ideal</p>
                                                 <p className="text-xl font-extrabold">{start.day} {start.rest.split(' ')[0]}</p>
                                             </div>
                                             <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <IconSvg d={Icon.flag} className="w-4.5 h-4.5 text-white/80" />
+                                                <IconSvg d={Icon.hourglass} className="w-5 h-5 text-white/80" />
                                                 <p className="mt-2 text-xs text-white/70">Batas aman</p>
                                                 <p className="text-xl font-extrabold">{end.day} {end.rest.split(' ')[0]}</p>
                                             </div>
