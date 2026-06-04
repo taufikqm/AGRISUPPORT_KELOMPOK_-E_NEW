@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Pengingat observasi petani (>7 hari tanpa input) — dijalankan harian.
 Schedule::command('notifikasi:reminder-observasi')->dailyAt('07:00');
+
+// Beri tahu admin tentang petani tidak aktif (>14 hari) — dijalankan mingguan.
+Schedule::command('notifikasi:admin-petani-tidak-aktif')->weeklyOn(1, '08:00');

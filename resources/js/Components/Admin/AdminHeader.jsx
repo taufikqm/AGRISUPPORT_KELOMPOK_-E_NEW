@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import AdminNotificationBell from '@/Components/Admin/AdminNotificationBell';
 
 export default function AdminHeader({ title, onMenuClick }) {
     const { auth } = usePage().props;
@@ -20,6 +21,8 @@ export default function AdminHeader({ title, onMenuClick }) {
             </div>
 
             <div className="flex items-center gap-3">
+                <AdminNotificationBell />
+
                 <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
                         <span className="text-emerald-400 text-xs font-bold uppercase">

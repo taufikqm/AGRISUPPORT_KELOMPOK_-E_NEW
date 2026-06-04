@@ -255,6 +255,13 @@ class FieldObservationController extends Controller
         // Dibungkus try/catch agar kegagalan notifikasi tidak pernah menggagalkan simpan observasi.
         try {
             app(\App\Services\NotificationTriggerService::class)->afterObservation($observation);
+
+            // Beri tahu admin: observasi masuk, dan anomali bila cuaca ekstrem.
+            $adminNotifier = app(\App\Services\AdminNotifier::class);
+            $adminNotifier->observasiMasuk($observation);
+            if (($observation->weather_precip_mm ?? 0) > 10 || ($observation->weather_wind_kph ?? 0) > 60) {
+                $adminNotifier->anomaliCuaca($observation);
+            }
         } catch (\Throwable $e) {
             report($e);
         }
