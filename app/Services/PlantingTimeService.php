@@ -62,11 +62,27 @@ class PlantingTimeService
             'end_label'        => $end->locale('id')->translatedFormat('d M Y'),
             'confidence_score' => $confidence,
             'confidence_label' => $this->confidenceLabel($confidence),
+            'climate'          => [
+                'rain' => $best['data']['rain'],
+                'temp' => $best['data']['temp'],
+            ],
+            'match_label'      => $this->matchLabel($best['selisih']),
             'basis'            => $this->basis($best['data'], $idealRain),
             'tips'             => $this->tips($cropType),
             'limited_data'     => $limited,
             'crop_type'        => $cropType,
         ];
+    }
+
+    /** Seberapa dekat curah hujan bulan terpilih dengan ideal (untuk grid metrik UI). */
+    private function matchLabel(float $selisih): string
+    {
+        return match (true) {
+            $selisih <= 1.0 => 'Sangat sesuai',
+            $selisih <= 2.5 => 'Sesuai',
+            $selisih <= 4.0 => 'Cukup',
+            default         => 'Kurang ideal',
+        };
     }
 
     /** @return array<int, array{rain: float, temp: float, days: int}> */
@@ -179,6 +195,8 @@ class PlantingTimeService
             'end_label'        => $end->locale('id')->translatedFormat('d M Y'),
             'confidence_score' => 30,
             'confidence_label' => 'Rendah',
+            'climate'          => null,
+            'match_label'      => null,
             'basis'            => ['Data cuaca historis tidak tersedia saat ini. Rekomendasi bersifat umum, silakan coba lagi nanti.'],
             'tips'             => $this->tips($cropType),
             'limited_data'     => true,
