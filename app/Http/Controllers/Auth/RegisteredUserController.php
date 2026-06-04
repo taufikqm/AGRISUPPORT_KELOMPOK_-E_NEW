@@ -86,6 +86,13 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        // Beri tahu admin ada petani baru — dibungkus agar kegagalan tak mengganggu registrasi.
+        try {
+            app(\App\Services\AdminNotifier::class)->petaniBaru($user);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return redirect(route('wilayah-lahan.index', absolute: false));
     }
 }

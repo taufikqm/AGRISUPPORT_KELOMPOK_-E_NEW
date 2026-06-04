@@ -113,4 +113,72 @@ class AdminNotificationTest extends TestCase
             ])
             ->assertRedirect(route('dashboard'));
     }
+
+    public function test_notifikasi_admin_saat_petani_baru(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+
+        app(\App\Services\AdminNotifier::class)->petaniBaru($petani);
+
+        $this->assertTrue(
+            $admin->fresh()->notifications()->get()
+                ->contains(fn ($n) => ($n->data['type'] ?? null) === 'petani_baru')
+        );
+    }
+
+    public function test_notifikasi_admin_saat_observasi_masuk(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        $area   = \App\Models\AgriculturalArea::factory()->for($petani)->create();
+        $obs    = \App\Models\FieldObservation::factory()->forArea($area)->create();
+
+        app(\App\Services\AdminNotifier::class)->observasiMasuk($obs);
+
+        $this->assertTrue(
+            $admin->fresh()->notifications()->get()
+                ->contains(fn ($n) => ($n->data['type'] ?? null) === 'observasi_masuk')
+        );
+    }
+
+    public function test_admin_dapat_tandai_notifikasi_dibaca(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        app(\App\Services\AdminNotifier::class)->petaniBaru($petani);
+        $notif = $admin->notifications()->first();
+
+        $this->actingAs($admin)
+            ->post(route('admin.notifikasi.mark-read', $notif->id))
+            ->assertRedirect();
+
+        $this->assertNotNull($admin->fresh()->notifications()->first()->read_at);
+    }
+
+    public function test_admin_unread_count_mengembalikan_jumlah(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        app(\App\Services\AdminNotifier::class)->petaniBaru($petani);
+
+        $this->actingAs($admin)
+            ->getJson(route('admin.api.notifikasi.unread-count'))
+            ->assertStatus(200)
+            ->assertJsonStructure(['count', 'recent'])
+            ->assertJson(['count' => 1]);
+    }
+
+    public function test_command_petani_tidak_aktif_notif_admin(): void
+    {
+        $admin            = User::factory()->admin()->create();
+        $petaniTidakAktif = User::factory()->create(['role' => 'petani']);
+
+        $this->artisan('notifikasi:admin-petani-tidak-aktif')->assertExitCode(0);
+
+        $this->assertTrue(
+            $admin->fresh()->notifications()->get()
+                ->contains(fn ($n) => ($n->data['type'] ?? null) === 'petani_tidak_aktif')
+        );
+    }
 }

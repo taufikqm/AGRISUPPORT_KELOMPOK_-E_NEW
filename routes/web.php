@@ -131,6 +131,9 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::get('/notifikasi', [AdminNotificationController::class, 'index'])->name('notifikasi.index');
         Route::post('/notifikasi/kirim', [AdminNotificationController::class, 'send'])->name('notifikasi.send');
         Route::get('/notifikasi/riwayat', [AdminNotificationController::class, 'history'])->name('notifikasi.history');
+        Route::post('/notifikasi/{id}/baca', [AdminNotificationController::class, 'markAsRead'])->name('notifikasi.mark-read');
+        Route::post('/notifikasi/baca-semua', [AdminNotificationController::class, 'markAllAsRead'])->name('notifikasi.mark-all-read');
+        Route::get('/api/notifikasi/unread-count', [AdminNotificationController::class, 'unreadCount'])->name('api.notifikasi.unread-count');
 
         // Pengaturan Admin — AGS-96
         Route::get('/pengaturan', [AdminSettingsController::class, 'index'])->name('pengaturan.index');

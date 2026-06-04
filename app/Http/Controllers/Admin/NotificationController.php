@@ -8,21 +8,23 @@ use App\Models\User;
 use App\Notifications\FarmerNotification;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 /**
  * Sistem Notifikasi Admin (AGS-95).
  *
- * Admin mengirim broadcast ke semua / sebagian petani. Notifikasi dikirim
- * lewat queue (SendBroadcastNotificationJob) memakai FarmerNotification
- * bertipe `pesan_admin` — sisi penerima (bell, dropdown, halaman) sudah ada di AGS-87.
+ * Dua sisi:
+ *  - PENGIRIM: admin broadcast ke petani (send) via queue SendBroadcastNotificationJob.
+ *  - PENERIMA: admin menerima notifikasi otomatis (petani_baru, observasi_masuk,
+ *    anomali_cuaca, petani_tidak_aktif) — tampil di bell AdminHeader & tab Kotak Masuk.
  */
 class NotificationController extends Controller
 {
-    /** Halaman kirim notifikasi + riwayat broadcast. */
+    /** Halaman: form broadcast + kotak masuk admin + riwayat broadcast. */
     public function index(Request $request)
     {
-        return $this->renderPage();
+        return $this->renderPage($request);
     }
 
     /** Kirim broadcast ke target petani (dispatch ke queue). */
@@ -45,17 +47,60 @@ class NotificationController extends Controller
         return back()->with('success', 'Notifikasi berhasil dikirim ke ' . count($userIds) . ' petani.');
     }
 
-    /** Riwayat broadcast yang sudah dikirim. */
+    /** Riwayat broadcast (alias halaman). */
     public function history(Request $request)
     {
-        return $this->renderPage();
+        return $this->renderPage($request);
     }
 
-    private function renderPage()
+    /** Tandai satu notifikasi admin (kotak masuk) sebagai dibaca. */
+    public function markAsRead(Request $request, string $id)
+    {
+        if (! Str::isUuid($id)) {
+            abort(404);
+        }
+
+        $request->user()->notifications()->findOrFail($id)->markAsRead();
+
+        return back();
+    }
+
+    /** Tandai semua notifikasi admin sebagai dibaca. */
+    public function markAllAsRead(Request $request)
+    {
+        $request->user()->unreadNotifications->markAsRead();
+
+        return back();
+    }
+
+    /** Jumlah belum dibaca + ringkasan terbaru untuk bell admin (JSON). */
+    public function unreadCount(Request $request)
+    {
+        $user = $request->user();
+
+        $recent = $user->notifications()
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(fn ($n) => $this->transform($n));
+
+        return response()->json([
+            'count'  => $user->unreadNotifications()->count(),
+            'recent' => $recent,
+        ]);
+    }
+
+    private function renderPage(Request $request)
     {
         $petani = User::where('role', 'petani')->get(['id', 'name', 'email']);
 
-        // Riwayat broadcast: kelompokkan notifikasi pesan_admin per judul + waktu kirim.
+        // Kotak masuk: notifikasi yang diterima admin ini.
+        $kotakMasuk = $request->user()->notifications()
+            ->latest()
+            ->get()
+            ->map(fn ($n) => $this->transform($n));
+
+        // Riwayat broadcast: notifikasi pesan_admin (untuk petani), dikelompokkan per kiriman.
         $history = DatabaseNotification::query()
             ->where('type', FarmerNotification::class)
             ->latest()
@@ -72,8 +117,25 @@ class NotificationController extends Controller
             ->values();
 
         return Inertia::render('Admin/Notifications', [
-            'petani'  => $petani,
-            'history' => $history,
+            'petani'      => $petani,
+            'kotakMasuk'  => $kotakMasuk,
+            'unreadCount' => $request->user()->unreadNotifications()->count(),
+            'history'     => $history,
         ]);
+    }
+
+    private function transform(DatabaseNotification $n): array
+    {
+        $data = $n->data ?? [];
+
+        return [
+            'id'         => $n->id,
+            'type'       => $data['type'] ?? 'umum',
+            'title'      => $data['title'] ?? 'Notifikasi',
+            'message'    => $data['message'] ?? '',
+            'url'        => $data['url'] ?? null,
+            'read_at'    => $n->read_at,
+            'time_ago'   => $n->created_at?->locale('id')->diffForHumans(),
+        ];
     }
 }
