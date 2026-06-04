@@ -34,7 +34,7 @@ class PlantingTimeController extends Controller
     {
         $validated = $request->validate([
             'area_id'   => 'required|exists:agricultural_areas,id',
-            'crop_type' => 'nullable|string|max:50',
+            'crop_type' => 'nullable|string|in:padi,jagung,kedelai',
         ]);
 
         $area = AgriculturalArea::findOrFail($validated['area_id']);

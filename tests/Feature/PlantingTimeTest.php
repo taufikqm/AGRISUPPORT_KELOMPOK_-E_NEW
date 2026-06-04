@@ -81,6 +81,17 @@ class PlantingTimeTest extends TestCase
             ->assertJsonValidationErrors('area_id');
     }
 
+    public function test_crop_type_di_luar_daftar_ditolak(): void
+    {
+        $farmer = User::factory()->create();
+        $area   = AgriculturalArea::factory()->for($farmer)->create();
+
+        $this->actingAs($farmer)
+            ->postJson(route('waktu-tanam.analyze'), ['area_id' => $area->id, 'crop_type' => 'tomat'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('crop_type');
+    }
+
     public function test_riwayat_analisis_tersimpan_di_action_log(): void
     {
         $this->fakeArchiveSukses();
