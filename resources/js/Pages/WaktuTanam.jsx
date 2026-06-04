@@ -21,8 +21,8 @@ const Icon = {
     drop: 'M12 2.25c3.5 4 6 7.2 6 10.5a6 6 0 0 1-12 0c0-3.3 2.5-6.5 6-10.5Z',
     sun:  'M12 3v2.25m0 13.5V21m9-9h-2.25M5.25 12H3m14.83-6.36-1.59 1.59M7.76 16.24l-1.59 1.59m12.66 0-1.59-1.59M7.76 7.76 6.17 6.17M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z',
     shield: 'M12 2.25 4.5 5.25v6c0 4.5 3 8.4 7.5 10.5 4.5-2.1 7.5-6 7.5-10.5v-6L12 2.25Z',
-    sprout: 'M7 20h10M10 20c5.5-2.5.8-6.4 3-10M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8ZM14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2Z',
-    hourglass: 'M6 2h12M6 22h12M8 2v4.5a3 3 0 0 0 .9 2.1L12 12m0 0 3.1 3.4a3 3 0 0 1 .9 2.1V22M12 12 8.9 15.4a3 3 0 0 0-.9 2.1V22m8-20v4.5a3 3 0 0 1-.9 2.1L12 12',
+    calendar: 'M8 2.75v3M16 2.75v3M3.5 9.5h17M5.25 5h13.5A1.75 1.75 0 0 1 20.5 6.75v12.5A1.75 1.75 0 0 1 18.75 21H5.25A1.75 1.75 0 0 1 3.5 19.25V6.75A1.75 1.75 0 0 1 5.25 5Z',
+    shieldCheck: 'M12 2.75 5 5.5v5.25c0 4.2 2.9 7.85 7 9.25 4.1-1.4 7-5.05 7-9.25V5.5L12 2.75ZM9 11.5l2 2 4-4',
     clipboard: 'M9 3.75H7.5A2.25 2.25 0 0 0 5.25 6v13.5A2.25 2.25 0 0 0 7.5 21.75h9a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 16.5 3.75H15m-6 0A1.5 1.5 0 0 1 10.5 2.25h3A1.5 1.5 0 0 1 15 3.75m-6 0A1.5 1.5 0 0 0 9 5.25h6V3.75',
     check: 'M4.5 12.75l6 6 9-13.5',
     spark: 'M12 3v4.5m0 9V21m9-9h-4.5m-9 0H3m13.5-6.36-3.18 3.18m-4.14 4.14L6 17.66m12 0-3.18-3.18M9.32 9.32 6.14 6.14',
@@ -202,12 +202,12 @@ export default function WaktuTanam({ areas = [] }) {
 
                                         <div className="mt-6 flex gap-3">
                                             <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <IconSvg d={Icon.sprout} className="w-5 h-5 text-white/80" />
+                                                <IconSvg d={Icon.calendar} className="w-5 h-5 text-white/80" />
                                                 <p className="mt-2 text-xs text-white/70">Mulai ideal</p>
                                                 <p className="text-xl font-extrabold">{start.day} {start.rest.split(' ')[0]}</p>
                                             </div>
                                             <div className="flex-1 rounded-2xl bg-white/12 p-4">
-                                                <IconSvg d={Icon.hourglass} className="w-5 h-5 text-white/80" />
+                                                <IconSvg d={Icon.shieldCheck} className="w-5 h-5 text-white/80" />
                                                 <p className="mt-2 text-xs text-white/70">Batas aman</p>
                                                 <p className="text-xl font-extrabold">{end.day} {end.rest.split(' ')[0]}</p>
                                             </div>
