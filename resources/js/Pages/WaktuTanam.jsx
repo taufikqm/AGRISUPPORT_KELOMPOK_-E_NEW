@@ -85,27 +85,27 @@ export default function WaktuTanam({ areas = [] }) {
         <AuthenticatedLayout title="Prediksi Waktu Tanam" currentRoute="waktu-tanam.index">
             <Head title="Prediksi Waktu Tanam" />
 
-            <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full space-y-5">
+            <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full space-y-4">
 
                 {/* ── HERO ─────────────────────────────── */}
-                <div className="grid lg:grid-cols-[1fr_360px] gap-5 items-start">
+                <div className="grid lg:grid-cols-[1fr_340px] gap-5 items-center">
                     <div>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eef4ef] text-[#2f6b45] text-xs font-bold px-3 py-1.5">
                             <LuSprout className="w-3.5 h-3.5" />
                             DSS Waktu Tanam
                         </span>
-                        <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold leading-tight text-[#18231d] max-w-xl">
+                        <h1 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-[#18231d] max-w-xl">
                             Pilih lahan, lihat jendela tanam yang paling aman.
                         </h1>
-                        <p className="mt-3 text-sm text-[#68766e] max-w-xl leading-relaxed">
+                        <p className="mt-2 text-sm text-[#68766e] max-w-xl leading-relaxed">
                             Prediksi fokus pada keputusan inti petani: kapan mulai tanam berdasarkan
                             pola curah hujan, suhu, dan risiko cuaca dari data historis lahan Anda.
                         </p>
                     </div>
 
-                    {/* Panel lahan aktif (filter) */}
-                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-5 shadow-sm">
-                        <p className="flex items-center gap-1.5 text-xs font-bold text-[#2f6b45] uppercase tracking-wide mb-3">
+                    {/* Panel lahan aktif (filter) — ringkas */}
+                    <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 shadow-sm">
+                        <p className="flex items-center gap-1.5 text-xs font-bold text-[#2f6b45] uppercase tracking-wide mb-2.5">
                             <LuLeaf className="w-3.5 h-3.5" /> Lahan aktif
                         </p>
 
@@ -114,7 +114,7 @@ export default function WaktuTanam({ areas = [] }) {
                                 Belum ada lahan. Tambahkan wilayah lahan dulu untuk memakai fitur ini.
                             </p>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2.5">
                                 <select
                                     dusk="filter-lahan"
                                     value={areaId}
@@ -123,24 +123,20 @@ export default function WaktuTanam({ areas = [] }) {
                                 >
                                     {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                                 </select>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="rounded-xl bg-[#f8faf8] border border-[#eef4ef] px-3 py-2">
-                                        <p className="font-bold text-[#18231d]">{CROP_LABEL[crop]}</p>
-                                        <p className="text-xs text-[#68766e]">Komoditas</p>
-                                    </div>
-                                    <div className="rounded-xl bg-[#f8faf8] border border-[#eef4ef] px-3 py-2 truncate">
-                                        <p className="font-bold text-[#18231d] truncate">{area?.location || '—'}</p>
-                                        <p className="text-xs text-[#68766e]">Wilayah</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <select
+                                        dusk="filter-komoditas"
+                                        value={crop}
+                                        onChange={(e) => setCrop(e.target.value)}
+                                        className="w-full rounded-xl border-[#e2e8f0] text-sm focus:ring-[#2f6b45] focus:border-[#2f6b45]"
+                                    >
+                                        {CROPS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                    </select>
+                                    <div className="rounded-xl bg-[#f8faf8] border border-[#eef4ef] px-3 py-1.5 flex flex-col justify-center min-w-0">
+                                        <p className="font-bold text-[#18231d] text-sm truncate">{area?.location || '—'}</p>
+                                        <p className="text-[11px] text-[#68766e] leading-none">Wilayah</p>
                                     </div>
                                 </div>
-                                <select
-                                    dusk="filter-komoditas"
-                                    value={crop}
-                                    onChange={(e) => setCrop(e.target.value)}
-                                    className="w-full rounded-xl border-[#e2e8f0] text-sm focus:ring-[#2f6b45] focus:border-[#2f6b45]"
-                                >
-                                    {CROPS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                </select>
                             </div>
                         )}
                     </div>
