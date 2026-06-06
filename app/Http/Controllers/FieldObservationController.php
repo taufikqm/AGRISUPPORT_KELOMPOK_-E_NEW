@@ -131,7 +131,7 @@ class FieldObservationController extends Controller
             ->get()
             ->map(fn($log) => [
                 'title'     => $log->recommendation->title ?? 'Tindakan',
-                'area_name' => optional($log->observation->agriculturalArea)->name ?? 'Lahan',
+                'area_name' => optional(optional($log->observation)->agriculturalArea)->name ?? 'Lahan',
                 'date'      => \Carbon\Carbon::parse($log->performed_at)->format('d M Y'),
                 'category'  => $log->recommendation->category ?? '',
             ]); 
