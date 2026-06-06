@@ -126,13 +126,13 @@ export default function AnalisisRisiko({ observation, risk_metrics }) {
                         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 p-6 md:p-10 relative z-10">
                             <RiskCircle score={overall} />
 
-                            <div className="flex-1 flex flex-col gap-4 text-center md:text-left">
+                            <div className="flex-1 min-w-0 flex flex-col gap-4 text-center md:text-left">
                                 <h3 className="text-[20px] md:text-[24px] font-black text-[#1e293b] tracking-tight">Status Risiko Keseluruhan</h3>
                                 <p className="text-[#64748b] leading-relaxed text-[15px] md:text-[16px] font-medium">
                                     {summary || "Sistem mendeteksi ancaman signifikan terhadap kesehatan tanaman Anda."}
                                 </p>
 
-                                <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                                <div className="flex flex-wrap gap-2 mt-2">
                                     <StatusBadge
                                         label="Keamanan Lahan"
                                         value={overall > 60 ? 'Menurun' : 'Stabil'}

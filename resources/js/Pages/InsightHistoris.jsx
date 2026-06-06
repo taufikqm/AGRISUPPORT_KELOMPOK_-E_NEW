@@ -90,27 +90,39 @@ function RiskTooltip({ active, payload, label }) {
 }
 
 /* ─── KPI Card ─── */
-function KpiCard({ label, value, badge, accent, iconBg, icon }) {
+function KpiCard({ label, value, badge, accent, iconBg, icon, gradFrom, gradTo }) {
     return (
-        <div
-            className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm transition-shadow hover:shadow-md"
-            style={{ borderLeftWidth: 4, borderLeftColor: accent }}
-        >
-            <div className="flex items-start justify-between mb-5">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style={{ background: iconBg }}>
+        <div className="relative bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden group border border-slate-100">
+            {/* subtle gradient glow top-right */}
+            <div
+                className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20 blur-2xl pointer-events-none transition-opacity group-hover:opacity-30"
+                style={{ background: accent }}
+            />
+
+            <div className="relative flex items-start justify-between mb-4">
+                <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                    style={{ background: iconBg }}
+                >
                     {icon}
                 </div>
                 {badge && (
                     <span
-                        className="text-[11px] font-semibold px-2.5 py-1 rounded-full border whitespace-nowrap"
-                        style={{ color: accent, borderColor: `${accent}33`, backgroundColor: `${accent}0d` }}
+                        className="text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide whitespace-nowrap"
+                        style={{ color: accent, backgroundColor: `${accent}18` }}
                     >
                         {badge}
                     </span>
                 )}
             </div>
-            <p className="text-[10px] font-bold text-[#64748b] uppercase tracking-[1px] mb-1">{label}</p>
-            <p className="text-2xl font-bold text-[#1e293b] leading-tight">{value}</p>
+
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[1.5px] mb-1.5">{label}</p>
+            <p className="text-[26px] font-black text-slate-800 leading-none">{value}</p>
+
+            {/* bottom accent line */}
+            <div className="absolute bottom-0 left-0 h-0.5 w-full opacity-40 rounded-b-2xl"
+                style={{ background: `linear-gradient(to right, ${accent}, transparent)` }}
+            />
         </div>
     );
 }
