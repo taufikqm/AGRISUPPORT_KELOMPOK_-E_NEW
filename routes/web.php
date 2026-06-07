@@ -102,9 +102,10 @@ Route::middleware(['auth', 'verified', 'admin'])
 
         // Manajemen Pengguna — AGS-90
         Route::get('/pengguna', [UserManagementController::class, 'index'])->name('pengguna.index');
-        Route::get('/pengguna/{user}', [UserManagementController::class, 'show'])->name('pengguna.show');
         Route::put('/pengguna/{user}', [UserManagementController::class, 'update'])->name('pengguna.update');
+        Route::post('/pengguna/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('pengguna.reset-password');
         Route::patch('/pengguna/{user}/status', [UserManagementController::class, 'toggleStatus'])->name('pengguna.toggle-status');
+        Route::delete('/pengguna/{user}', [UserManagementController::class, 'destroy'])->name('pengguna.destroy');
 
         // Manajemen Lahan & Observasi — AGS-91
         Route::get('/lahan', [LandManagementController::class, 'index'])->name('lahan.index');

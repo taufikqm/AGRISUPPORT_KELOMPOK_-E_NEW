@@ -7,7 +7,7 @@ export default function AuthenticatedLayout({ children, title, badge, currentRou
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     return (
-        <div className="bg-[#f8fafc] font-['Inter',sans-serif] min-h-screen flex overflow-x-hidden">
+        <div className="theme-petani bg-[#f8fafc] font-['Inter',sans-serif] min-h-screen flex overflow-x-hidden">
             {/* Sidebar Component */}
             <AppSidebar 
                 currentRoute={currentRoute} 

@@ -1,45 +1,432 @@
-import { Head } from '@inertiajs/react';
-import { router } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
-/**
- * ============================================================
- * STUB: Admin/UserManagement.jsx — Manajemen Pengguna Admin (AGS-90)
- * ============================================================
- * ASSIGNEE : Bian
- * BRANCH   : feature/AGS-90-manajemen-pengguna-admin
- *
- * BACKEND TERKAIT:
- *   - app/Http/Controllers/Admin/UserManagementController.php
- *
- * PROPS (mode list):
- *   @param {Object} auth       — data user admin
- *   @param {Object} users      — paginated users {data, links, meta}
- *   @param {Object} filters    — {search: string} dari query param
- *
- * PROPS (mode detail — jika show() mengirim user):
- *   @param {Object} user       — detail user
- *   @param {Array}  lands      — lahan milik user tersebut
- *
- * FITUR YANG PERLU DIIMPLEMENTASI:
- *   [ ] Tabel daftar pengguna (name, email, phone, tanggal daftar, status)
- *   [ ] Search by nama/email (dusk="input-search-pengguna")
- *   [ ] Pagination
- *   [ ] Tombol Detail per baris (dusk="btn-detail-pengguna-{id}")
- *   [ ] Modal/slide edit data pengguna (dusk="btn-edit-pengguna-{id}")
- *   [ ] Tombol aktif/nonaktif akun (dusk="btn-toggle-status-{id}")
- *   [ ] Halaman detail: info pengguna + daftar lahannya
- * ============================================================
- */
-export default function UserManagement({ auth, users, filters, user, lands }) {
+const inputClass =
+    'w-full rounded-xl bg-slate-800 border-slate-700 text-white placeholder-slate-500 text-sm focus:ring-emerald-500 focus:border-emerald-500';
+
+function Flash({ message }) {
+    const [visible, setVisible] = useState(false);
+    useEffect(() => {
+        if (!message) return;
+        setVisible(true);
+        const t = setTimeout(() => setVisible(false), 6000);
+        return () => clearTimeout(t);
+    }, [message]);
+    if (!message || !visible) return null;
     return (
-        <AdminLayout title="Manajemen Pengguna" currentRoute="admin.pengguna.index">
+        <div className="mb-4 flex items-start gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-medium px-4 py-3">
+            <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">✓</span>
+            <span className="flex-1 leading-snug">{message}</span>
+            <button onClick={() => setVisible(false)} className="shrink-0 text-emerald-400/70 hover:text-emerald-200 text-lg leading-none">×</button>
+        </div>
+    );
+}
+
+function StatusBadge({ active }) {
+    return (
+        <span dusk="status-badge" className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${
+            active ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'
+        }`}>
+            {active ? 'Aktif' : 'Nonaktif'}
+        </span>
+    );
+}
+
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Belum ada';
+
+function IconAction({ title, onClick, colorClass, dusk, children }) {
+    return (
+        <button
+            dusk={dusk}
+            onClick={onClick}
+            title={title}
+            aria-label={title}
+            className={`p-1.5 rounded-lg hover:bg-slate-800 transition-colors ${colorClass}`}
+        >
+            {children}
+        </button>
+    );
+}
+
+const icons = {
+    detail: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>,
+    edit:   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" /></svg>,
+    reset:  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" /></svg>,
+    power:  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" /></svg>,
+    trash:  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>,
+};
+
+export default function UserManagement({ users, filters = {}, detail = null }) {
+    const { flash = {} } = usePage().props;
+
+    const [search,        setSearch]        = useState(filters.search ?? '');
+    const [detailRow,     setDetailRow]     = useState(null);   // baris yang diklik (header instan)
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [editTarget,    setEditTarget]    = useState(null);
+    const [deleteTarget,  setDeleteTarget]  = useState(null);
+    const [confirmAksi,   setConfirmAksi]   = useState(null); // {type:'reset'|'toggle', user}
+
+    /* ── Search & filter ── */
+    const submitSearch = (e) => {
+        e.preventDefault();
+        router.get(route('admin.pengguna.index'), { ...filters, search: search || undefined }, { preserveState: true, replace: true });
+    };
+    const applyStatus = (value) => {
+        router.get(route('admin.pengguna.index'), { ...filters, status: value || undefined }, { preserveState: true, replace: true });
+    };
+    const resetFilter = () => { setSearch(''); router.get(route('admin.pengguna.index')); };
+
+    /* ── Detail (lazy load via Inertia partial) ── */
+    const openDetail = (u) => {
+        setDetailRow(u);
+        setDetailLoading(true);
+        router.reload({
+            only: ['detail'],
+            data: { detail_id: u.id },
+            preserveScroll: true,
+            onFinish: () => setDetailLoading(false),
+        });
+    };
+    const closeDetail = () => setDetailRow(null);
+
+    /* ── Edit ── */
+    const editForm = useForm({ name: '', email: '', phone_number: '' });
+    const openEdit = (u) => {
+        setEditTarget(u);
+        editForm.setData({ name: u.name ?? '', email: u.email ?? '', phone_number: u.phone_number ?? '' });
+    };
+    const submitEdit = (e) => {
+        e.preventDefault();
+        editForm.put(route('admin.pengguna.update', editTarget.id), {
+            preserveScroll: true,
+            onSuccess: () => { setEditTarget(null); editForm.reset(); },
+        });
+    };
+
+    /* ── Reset password & toggle status ── */
+    const runAksi = () => {
+        if (!confirmAksi) return;
+        const { type, user } = confirmAksi;
+        if (type === 'reset') {
+            router.post(route('admin.pengguna.reset-password', user.id), {}, { preserveScroll: true, onFinish: () => setConfirmAksi(null) });
+        } else {
+            router.patch(route('admin.pengguna.toggle-status', user.id), {}, { preserveScroll: true, onFinish: () => setConfirmAksi(null) });
+        }
+    };
+
+    /* ── Hapus ── */
+    const handleDelete = () => {
+        router.delete(route('admin.pengguna.destroy', deleteTarget.id), {
+            preserveScroll: true,
+            onSuccess: () => setDeleteTarget(null),
+        });
+    };
+
+    return (
+        <AdminLayout title="Manajemen Pengguna">
             <Head title="Manajemen Pengguna" />
-            <div className="py-8 px-4 sm:px-6 lg:px-8">
-                {/* TODO: Implementasi manajemen pengguna di sini */}
-                {/* dusk="input-search-pengguna" untuk field pencarian */}
-                {/* dusk="btn-detail-pengguna-{id}" untuk tombol detail */}
+
+            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+
+                {/* Header */}
+                <div className="mb-5">
+                    <h1 className="text-2xl font-bold text-white">Manajemen Pengguna</h1>
+                    <p className="text-sm text-slate-400">Kelola akun petani: lihat detail, edit data, reset password, nonaktifkan, atau hapus akun.</p>
+                </div>
+
+                <Flash message={flash?.success} />
+
+                {/* Search & Filter */}
+                <div className="flex flex-wrap gap-3 mb-5">
+                    <form onSubmit={submitSearch} className="flex-1 min-w-[220px]">
+                        <input
+                            dusk="input-search-pengguna"
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Cari nama atau email petani…"
+                            className={inputClass}
+                        />
+                    </form>
+
+                    <select
+                        dusk="filter-status-pengguna"
+                        value={filters.status ?? ''}
+                        onChange={(e) => applyStatus(e.target.value)}
+                        className="rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-sm px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                        <option value="">Semua Status</option>
+                        <option value="aktif">Aktif</option>
+                        <option value="nonaktif">Nonaktif</option>
+                    </select>
+
+                    {(filters.search || filters.status) && (
+                        <button onClick={resetFilter} className="text-sm text-slate-400 hover:text-white px-2">Reset</button>
+                    )}
+                </div>
+
+                {/* Tabel */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto scrollbar-slim">
+                        <table dusk="pengguna-table" className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wide">
+                                    <th className="px-4 py-3 text-left font-semibold">Nama</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Email</th>
+                                    <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Observasi Terakhir</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Status</th>
+                                    <th className="px-4 py-3 text-right font-semibold sticky right-0 bg-slate-900">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800">
+                                {users.data.length === 0 ? (
+                                    <tr>
+                                        <td dusk="empty-state" colSpan={5} className="px-4 py-12 text-center text-slate-500">
+                                            {filters.search ? 'Data petani tidak ditemukan.' : 'Belum ada data petani terdaftar.'}
+                                        </td>
+                                    </tr>
+                                ) : users.data.map((u) => (
+                                    <tr key={u.id} dusk={`pengguna-row-${u.id}`} className="hover:bg-slate-800/40 transition-colors">
+                                        <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{u.name}</td>
+                                        <td className="px-4 py-3 text-slate-300 whitespace-nowrap">{u.email}</td>
+                                        <td className="px-4 py-3 text-slate-400 whitespace-nowrap text-xs">{fmtDate(u.last_observation_date)}</td>
+                                        <td className="px-4 py-3"><StatusBadge active={u.is_active} /></td>
+                                        <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900">
+                                            <div className="flex items-center gap-1 justify-end">
+                                                <IconAction dusk={`btn-detail-pengguna-${u.id}`} title="Detail" onClick={() => openDetail(u)}
+                                                    colorClass="text-slate-300 hover:text-white">{icons.detail}</IconAction>
+                                                <IconAction dusk={`btn-edit-pengguna-${u.id}`} title="Edit data" onClick={() => openEdit(u)}
+                                                    colorClass="text-emerald-400 hover:text-emerald-300">{icons.edit}</IconAction>
+                                                <IconAction dusk={`btn-reset-pengguna-${u.id}`} title="Reset password" onClick={() => setConfirmAksi({ type: 'reset', user: u })}
+                                                    colorClass="text-amber-400 hover:text-amber-300">{icons.reset}</IconAction>
+                                                <IconAction dusk={`btn-toggle-status-${u.id}`} title={u.is_active ? 'Nonaktifkan akun' : 'Aktifkan akun'} onClick={() => setConfirmAksi({ type: 'toggle', user: u })}
+                                                    colorClass={u.is_active ? 'text-orange-400 hover:text-orange-300' : 'text-emerald-400 hover:text-emerald-300'}>{icons.power}</IconAction>
+                                                <IconAction dusk={`btn-hapus-pengguna-${u.id}`} title="Hapus akun" onClick={() => setDeleteTarget(u)}
+                                                    colorClass="text-red-400 hover:text-red-300">{icons.trash}</IconAction>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {users.last_page > 1 && (
+                        <div className="px-5 py-4 border-t border-slate-800 flex justify-between items-center text-sm text-slate-400">
+                            <span>Halaman {users.current_page} dari {users.last_page} ({users.total} pengguna)</span>
+                            <div className="flex gap-2">
+                                {users.prev_page_url && (
+                                    <button onClick={() => router.get(users.prev_page_url)} className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">← Prev</button>
+                                )}
+                                {users.next_page_url && (
+                                    <button onClick={() => router.get(users.next_page_url)} className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">Next →</button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* ── Modal Detail (lengkap) ── */}
+            {detailRow && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8">
+                    <div dusk="modal-detail-pengguna" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[88vh] overflow-y-auto scrollbar-slim">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-5 gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                                    <span className="text-emerald-400 font-bold text-lg uppercase">{detailRow.name?.charAt(0)}</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-white leading-tight">{detailRow.name}</h2>
+                                    <div className="mt-1"><StatusBadge active={detailRow.is_active} /></div>
+                                </div>
+                            </div>
+                            <button onClick={closeDetail} className="text-slate-400 hover:text-white text-xl leading-none shrink-0">×</button>
+                        </div>
+
+                        {(detailLoading || !detail || detail.profile?.id !== detailRow.id) ? (
+                            <div className="py-10 text-center text-slate-500 text-sm">Memuat detail…</div>
+                        ) : (
+                            <div className="space-y-5 text-sm">
+                                {/* A. Profil Akun */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Profil Akun</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-slate-800 rounded-xl p-3 col-span-2 sm:col-span-1">
+                                            <p className="text-xs text-slate-500 mb-0.5">Email</p>
+                                            <p className="text-slate-200 break-all">{detail.profile.email}</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 col-span-2 sm:col-span-1">
+                                            <p className="text-xs text-slate-500 mb-0.5">No. Telepon</p>
+                                            <p className="text-slate-200">{detail.profile.phone_number || 'Belum ada'}</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3">
+                                            <p className="text-xs text-slate-500 mb-0.5">Email Terverifikasi</p>
+                                            <p className={detail.profile.email_verified_at ? 'text-emerald-400 font-medium' : 'text-amber-400 font-medium'}>
+                                                {detail.profile.email_verified_at ? '✓ Terverifikasi' : 'Belum'}
+                                            </p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3">
+                                            <p className="text-xs text-slate-500 mb-0.5">Terdaftar Sejak</p>
+                                            <p className="text-slate-200">{fmtDate(detail.profile.created_at)}</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* B. Ringkasan Statistik */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Ringkasan Aktivitas</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.lands_count}</p>
+                                            <p className="text-xs text-slate-500">Lahan</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.total_area}</p>
+                                            <p className="text-xs text-slate-500">Total Ha</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.observations_count}</p>
+                                            <p className="text-xs text-slate-500">Observasi</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.completed_recommendations}</p>
+                                            <p className="text-xs text-slate-500">Rekomendasi Selesai</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">Observasi terakhir: <span className="text-slate-300">{fmtDate(detail.stats.last_observation_date)}</span></p>
+                                </section>
+
+                                {/* D. Kondisi Terkini */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Kondisi Terkini Lahan</h3>
+                                    {detail.latest_observation ? (
+                                        <div className="bg-slate-800 rounded-xl p-3">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-slate-300 font-medium">{detail.latest_observation.area_name}</span>
+                                                <span className="text-xs text-slate-500">{fmtDate(detail.latest_observation.observation_date)}</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                                <div className="flex justify-between"><span className="text-slate-500">Kondisi Tanaman</span><span className="text-slate-200">{detail.latest_observation.crop_condition ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Kelembapan Tanah</span><span className="text-slate-200">{detail.latest_observation.soil_moisture ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Genangan Air</span><span className="text-slate-200">{detail.latest_observation.water_puddle ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Indikasi Hama</span><span className="text-slate-200">{detail.latest_observation.pest_indication ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Indikasi Penyakit</span><span className="text-slate-200">{detail.latest_observation.disease_indication ?? '—'}</span></div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-500 bg-slate-800 rounded-xl p-3">Belum ada observasi.</p>
+                                    )}
+                                </section>
+
+                                {/* C. Daftar Lahan */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Daftar Lahan ({detail.lands.length})</h3>
+                                    {detail.lands.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {detail.lands.map((l) => (
+                                                <div key={l.id} className="bg-slate-800 rounded-xl p-3 flex items-center justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-slate-200 font-medium truncate">{l.name}</p>
+                                                        <p className="text-xs text-slate-500 truncate">{l.location_name || 'Lokasi belum diatur'} · {l.soil_type || 'Jenis tanah —'}</p>
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <p className="text-slate-300 text-xs">{l.area_size ?? '—'} ha</p>
+                                                        <p className="text-xs text-slate-500">{l.observations_count} observasi</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-500 bg-slate-800 rounded-xl p-3">Petani belum memiliki lahan.</p>
+                                    )}
+                                </section>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Modal Edit ── */}
+            {editTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                    <div dusk="modal-edit-pengguna" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-bold text-white">Edit Data Pengguna</h2>
+                            <button onClick={() => { setEditTarget(null); editForm.reset(); }} className="text-slate-400 hover:text-white text-xl leading-none">×</button>
+                        </div>
+                        <form onSubmit={submitEdit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-1.5">Nama Lengkap</label>
+                                <input dusk="input-edit-nama" type="text" value={editForm.data.name}
+                                    onChange={(e) => editForm.setData('name', e.target.value)} className={inputClass} />
+                                {editForm.errors.name && <p className="text-xs text-red-400 mt-1">{editForm.errors.name}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-1.5">Email</label>
+                                <input dusk="input-edit-email" type="email" value={editForm.data.email}
+                                    onChange={(e) => editForm.setData('email', e.target.value)} className={inputClass} />
+                                {editForm.errors.email && <p className="text-xs text-red-400 mt-1">{editForm.errors.email}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-1.5">No. Telepon</label>
+                                <input dusk="input-edit-telp" type="text" value={editForm.data.phone_number}
+                                    onChange={(e) => editForm.setData('phone_number', e.target.value)} className={inputClass} />
+                                {editForm.errors.phone_number && <p className="text-xs text-red-400 mt-1">{editForm.errors.phone_number}</p>}
+                            </div>
+                            <div className="flex gap-3 pt-1">
+                                <button type="button" onClick={() => { setEditTarget(null); editForm.reset(); }}
+                                    className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800">Batal</button>
+                                <button dusk="btn-simpan-edit-pengguna" type="submit" disabled={editForm.processing}
+                                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold disabled:opacity-50">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Konfirmasi Reset / Toggle ── */}
+            {confirmAksi && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                    <div dusk="modal-konfirmasi-aksi" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                        <h2 className="text-lg font-bold text-white mb-2">
+                            {confirmAksi.type === 'reset' ? 'Reset Password?' : (confirmAksi.user.is_active ? 'Nonaktifkan Akun?' : 'Aktifkan Akun?')}
+                        </h2>
+                        <p className="text-sm text-slate-400 mb-5">
+                            {confirmAksi.type === 'reset'
+                                ? <>Password <span className="text-white font-medium">{confirmAksi.user.name}</span> akan diganti dengan password sementara acak.</>
+                                : confirmAksi.user.is_active
+                                    ? <><span className="text-white font-medium">{confirmAksi.user.name}</span> tidak akan bisa login sampai diaktifkan kembali.</>
+                                    : <><span className="text-white font-medium">{confirmAksi.user.name}</span> akan dapat login kembali.</>}
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setConfirmAksi(null)} className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800">Batal</button>
+                            <button dusk="btn-konfirmasi-aksi" onClick={runAksi}
+                                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold">Ya, Lanjutkan</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Konfirmasi Hapus ── */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                    <div dusk="modal-konfirmasi-hapus" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                        <h2 className="text-lg font-bold text-white mb-2">Hapus Akun Pengguna?</h2>
+                        <p className="text-sm text-slate-400 mb-5">
+                            Akun <span className="text-white font-medium">{deleteTarget.name}</span> akan dihapus permanen beserta seluruh datanya. Tindakan ini tidak bisa dibatalkan.
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800">Batal</button>
+                            <button dusk="btn-konfirmasi-hapus" onClick={handleDelete}
+                                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold">Ya, Hapus</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }
