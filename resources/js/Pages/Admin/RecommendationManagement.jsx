@@ -33,6 +33,8 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
     const [editTarget,    setEditTarget]    = useState(null);
     const [deleteTarget,  setDeleteTarget]  = useState(null);
     const [detailTarget,  setDetailTarget]  = useState(null);   // log lengkap untuk modal detail
+    const [showWarnModal, setShowWarnModal] = useState(false);
+    const [warning,       setWarning]       = useState(false);
 
     /* ── Form tambah manual ─── */
     const addForm = useForm({ user_id: '', area_id: '', description: '' });
@@ -74,6 +76,15 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
         });
     };
 
+    /* ── Peringatkan petani ─── */
+    const handleWarn = () => {
+        setWarning(true);
+        router.post(route('admin.rekomendasi.warn'), {}, {
+            preserveScroll: true,
+            onFinish: () => { setWarning(false); setShowWarnModal(false); },
+        });
+    };
+
     /* ── Filter ─── */
     const applyFilter = (key, value) => {
         router.get(route('admin.rekomendasi.index'), { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
@@ -93,13 +104,22 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                         <h1 className="text-2xl font-bold text-white">Manajemen Rekomendasi</h1>
                         <p className="text-sm text-slate-400">Monitor rekomendasi sistem dan kelola rekomendasi manual untuk petani.</p>
                     </div>
-                    <button
-                        dusk="btn-tambah-rekomendasi"
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
-                    >
-                        <span className="text-lg leading-none">+</span> Tambah Manual
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            dusk="btn-peringatkan-petani"
+                            onClick={() => setShowWarnModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold transition-colors"
+                        >
+                            <span className="text-base leading-none">⚠</span> Peringatkan Petani
+                        </button>
+                        <button
+                            dusk="btn-tambah-rekomendasi"
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+                        >
+                            <span className="text-lg leading-none">+</span> Tambah Manual
+                        </button>
+                    </div>
                 </div>
 
                 <Flash message={flash?.success} />
@@ -444,6 +464,28 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                             <button dusk="btn-konfirmasi-hapus" onClick={handleDelete}
                                 className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition-colors">
                                 Ya, Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Konfirmasi Peringatkan ── */}
+            {showWarnModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                    <div dusk="modal-konfirmasi-peringatkan" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                        <h2 className="text-lg font-bold text-white mb-2">Peringatkan Petani?</h2>
+                        <p className="text-sm text-slate-400 mb-5">
+                            Sistem akan mengirim notifikasi pengingat ke <span className="text-white font-medium">semua petani yang masih memiliki rekomendasi belum diselesaikan</span>. Petani yang sudah menyelesaikan semua rekomendasi tidak akan dikirimi.
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowWarnModal(false)} disabled={warning}
+                                className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50">
+                                Batal
+                            </button>
+                            <button dusk="btn-konfirmasi-peringatkan" onClick={handleWarn} disabled={warning}
+                                className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold transition-colors disabled:opacity-50">
+                                {warning ? 'Mengirim…' : 'Ya, Kirim'}
                             </button>
                         </div>
                     </div>

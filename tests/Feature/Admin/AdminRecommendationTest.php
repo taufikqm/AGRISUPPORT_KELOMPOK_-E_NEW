@@ -251,4 +251,61 @@ class AdminRecommendationTest extends TestCase
             ->delete(route('admin.rekomendasi.destroy', $log->id))
             ->assertStatus(404);
     }
+
+    // ── Peringatkan (warn) ──────────────────────────────────────────────────────
+
+    private function seedMonitoringTemplate(): void
+    {
+        Recommendation::create([
+            'category'    => 'Monitoring',
+            'title'       => 'Pemantauan Rutin',
+            'description' => 'Lakukan pemantauan rutin pada lahan.',
+            'urgency'     => 'RENDAH',
+            'color'       => 'gray',
+            'details'     => ['steps' => ['Cek kondisi lahan secara berkala.']],
+        ]);
+    }
+
+    public function test_peringatkan_mengirim_notifikasi_ke_petani_yang_punya_rekomendasi_belum_selesai(): void
+    {
+        $this->seedMonitoringTemplate();
+
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        $area   = AgriculturalArea::factory()->for($petani)->create();
+        \App\Models\FieldObservation::factory()->forArea($area)->create();
+
+        Notification::fake();
+
+        $this->actingAs($admin)
+            ->post(route('admin.rekomendasi.warn'))
+            ->assertRedirect();
+
+        Notification::assertSentTo($petani, FarmerNotification::class, function ($n) {
+            return $n->type === 'peringatan_rekomendasi';
+        });
+    }
+
+    public function test_peringatkan_tidak_mengirim_ke_petani_tanpa_observasi(): void
+    {
+        $this->seedMonitoringTemplate();
+
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']); // tanpa observasi
+
+        Notification::fake();
+
+        $this->actingAs($admin)
+            ->post(route('admin.rekomendasi.warn'))
+            ->assertRedirect();
+
+        Notification::assertNotSentTo($petani, FarmerNotification::class);
+    }
+
+    public function test_petani_tidak_bisa_memicu_peringatkan(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'petani']))
+            ->post(route('admin.rekomendasi.warn'))
+            ->assertRedirect(route('dashboard'));
+    }
 }
