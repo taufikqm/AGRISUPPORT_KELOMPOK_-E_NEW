@@ -7,7 +7,7 @@ export default function AdminLayout({ children, title }) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     return (
-        <div className="bg-slate-950 font-['Inter',sans-serif] min-h-screen flex overflow-hidden">
+        <div className="theme-admin bg-slate-950 font-['Inter',sans-serif] min-h-screen flex overflow-hidden">
             <AdminSidebar
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
