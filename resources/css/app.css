@@ -12,25 +12,26 @@
 /* Firefox — warna default netral di seluruh dokumen */
 html {
     scrollbar-width: thin;
-    scrollbar-color: rgba(100, 116, 139, 0.5) transparent; /* slate-500 */
+    scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
 }
 
 /* WebKit (Chrome/Edge/Safari) — berlaku ke semua elemen yang bisa di-scroll */
 *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 *::-webkit-scrollbar-track {
     background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-    background-color: rgba(100, 116, 139, 0.5); /* slate-500/50 */
+    background-color: rgba(100, 116, 139, 0.3);
     border-radius: 9999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(100, 116, 139, 0.8);
+    background-color: rgba(100, 116, 139, 0.55);
+}
+*::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 /* Area Admin — tema gelap (slate-700/600) */
@@ -38,26 +39,31 @@ html {
     scrollbar-color: #334155 transparent;
 }
 .theme-admin ::-webkit-scrollbar-thumb {
-    background-color: #334155; /* slate-700 */
+    background-color: rgba(51, 65, 85, 0.6);
 }
 .theme-admin ::-webkit-scrollbar-thumb:hover {
-    background-color: #475569; /* slate-600 */
+    background-color: rgba(71, 85, 105, 0.8);
 }
 
-/* Area Petani — tema terang (slate-300/400) */
+/* Area Petani — tema hijau subtle */
 .theme-petani {
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-color: rgba(38, 59, 54, 0.25) transparent;
 }
 .theme-petani ::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1; /* slate-300 */
+    background-color: rgba(38, 59, 54, 0.25);
 }
 .theme-petani ::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8; /* slate-400 */
+    background-color: rgba(38, 59, 54, 0.45);
 }
 
-/* Utility manual bila suatu elemen perlu scrollbar tipis eksplisit */
-@layer utilities {
-    .scrollbar-slim {
-        scrollbar-width: thin;
-    }
+/* Sidebar scrollbar — lebih tipis & transparan */
+.theme-petani aside ::-webkit-scrollbar {
+    width: 4px;
+}
+.theme-petani aside ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+}
+.theme-petani aside ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.3);
 }

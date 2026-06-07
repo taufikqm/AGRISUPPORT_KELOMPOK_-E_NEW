@@ -1,5 +1,14 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const BG_IMAGES = [
+    '/images/backgrounds/bg1.jpg',
+    '/images/backgrounds/bg2.png',
+    '/images/backgrounds/bg3.png',
+    '/images/backgrounds/bg4.png',
+    '/images/backgrounds/bg5.jpg',
+    '/images/backgrounds/bg6.jpg',
+];
 
 const EnvelopeIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -36,6 +45,14 @@ export default function Login({ status }) {
     });
 
     const [showPassword, setShowPassword] = useState(false);
+    const [currentBg, setCurrentBg] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentBg((prev) => (prev + 1) % BG_IMAGES.length);
+        }, 6000);
+        return () => clearInterval(timer);
+    }, []);
 
     const submit = (e) => {
         e.preventDefault();
@@ -45,40 +62,53 @@ export default function Login({ status }) {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 relative flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-inter overflow-hidden">
-            {/* Background Blur Elements */}
-            <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#3d5a3d]/5 rounded-full blur-[64px] pointer-events-none transform translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-green-500/5 rounded-full blur-[64px] pointer-events-none transform -translate-x-1/2 translate-y-1/4" />
-
+        <div className="min-h-screen relative flex items-center justify-center font-inter py-12 px-4 sm:px-6">
             <Head title="Masuk ke Sistem" />
 
-            <div className="w-full max-w-[448px] relative z-10 flex flex-col gap-10">
+            {/* Slideshow Background */}
+            {BG_IMAGES.map((src, i) => (
+                <img
+                    key={src}
+                    src={src}
+                    alt="Agricultural landscape"
+                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] ease-in-out"
+                    style={{ opacity: i === currentBg ? 1 : 0 }}
+                />
+            ))}
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-[#1a3318]/65" />
+
+            {/* Form Container */}
+            <div className="w-full max-w-[440px] relative z-10 flex flex-col gap-7">
                 {/* Header */}
-                <div className="text-center flex flex-col gap-2">
-                    <h1 className="text-4xl font-extrabold text-[#3d5a3d] tracking-tight">
-                        AgriSupport
-                    </h1>
-                    <p className="text-sm font-medium text-slate-500">
-                        Sistem Pendukung Keputusan Pertanian Berbasis Data
-                    </p>
+                <div className="text-center flex flex-col items-center gap-3">
+                    <img src="/images/logo-icon.png" alt="AgriSupport" className="h-20 w-20 object-contain drop-shadow-lg" />
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-md">
+                            Masuk ke Sistem
+                        </h1>
+                        <p className="text-sm font-medium text-white/70 mt-1">
+                            Silakan masuk untuk melanjutkan
+                        </p>
+                    </div>
                 </div>
 
                 {/* Card */}
-                <div className="bg-white rounded-2xl shadow-[0_25px_50px_0_rgba(0,0,0,0.1)] border border-slate-200/50 p-10 flex flex-col">
+                <div className="bg-white/35 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/40 p-8 sm:p-10 flex flex-col">
                     {status && (
-                        <div className="mb-6 text-sm font-medium text-green-600 bg-green-50 p-3 rounded-lg text-center">
+                        <div className="mb-6 text-sm font-medium text-green-600 bg-green-50/80 p-3 rounded-lg text-center">
                             {status}
                         </div>
                     )}
 
-                    <form onSubmit={submit} className="flex flex-col gap-6">
+                    <form onSubmit={submit} className="flex flex-col gap-5">
                         {/* Email Input */}
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-semibold text-slate-800" htmlFor="email">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-bold text-[#1a3318]" htmlFor="email">
                                 Email
                             </label>
                             <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-[#2D5A27]/50">
                                     <EnvelopeIcon className="w-5 h-5" />
                                 </span>
                                 <input
@@ -87,7 +117,7 @@ export default function Login({ status }) {
                                     name="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className="block w-full pl-[44px] pr-4 py-3 bg-slate-50/50 border-transparent focus:border-[#3d5a3d] focus:bg-white focus:ring-0 rounded-xl text-sm transition-colors text-slate-700 placeholder:text-slate-400"
+                                    className="block w-full pl-[44px] pr-4 py-3 bg-white/90 border border-white/60 focus:border-[#2D5A27]/50 focus:bg-white focus:ring-1 focus:ring-[#2D5A27]/20 rounded-xl text-sm transition-all text-slate-800 placeholder:text-slate-400 shadow-sm"
                                     placeholder="nama@email.com"
                                     required
                                     autoComplete="username"
@@ -97,20 +127,20 @@ export default function Login({ status }) {
                         </div>
 
                         {/* Password Input */}
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-1.5">
                             <div className="flex items-center justify-between">
-                                <label className="text-sm font-semibold text-slate-800" htmlFor="password">
+                                <label className="text-sm font-bold text-[#1a3318]" htmlFor="password">
                                     Kata Sandi
                                 </label>
                                 <Link
                                     href={route('password.request')}
-                                    className="text-xs font-semibold text-[#3d5a3d] hover:text-[#2d432d] transition-colors"
+                                    className="text-xs font-semibold text-[#2D5A27]/80 hover:text-[#2D5A27] transition-colors"
                                 >
                                     Lupa sandi?
                                 </Link>
                             </div>
                             <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-[#2D5A27]/50">
                                     <LockIcon className="w-5 h-5" />
                                 </span>
                                 <input
@@ -119,7 +149,7 @@ export default function Login({ status }) {
                                     name="password"
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
-                                    className="block w-full pl-[44px] pr-12 py-3 bg-slate-50/50 border-transparent focus:border-[#3d5a3d] focus:bg-white focus:ring-0 rounded-xl text-sm transition-colors text-slate-700 placeholder:text-slate-400"
+                                    className="block w-full pl-[44px] pr-12 py-3 bg-white/90 border border-white/60 focus:border-[#2D5A27]/50 focus:bg-white focus:ring-1 focus:ring-[#2D5A27]/20 rounded-xl text-sm transition-all text-slate-800 placeholder:text-slate-400 shadow-sm"
                                     placeholder="Masukkan kata sandi"
                                     required
                                     autoComplete="current-password"
@@ -127,7 +157,7 @@ export default function Login({ status }) {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[#2D5A27]/40 hover:text-[#2D5A27]/70 transition-colors focus:outline-none"
                                 >
                                     <EyeIcon className="w-5 h-5" show={showPassword} />
                                 </button>
@@ -139,32 +169,26 @@ export default function Login({ status }) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="mt-4 w-full flex justify-center py-3.5 px-4 rounded-xl text-base font-bold tracking-wide text-white bg-[#3d5a3d] hover:bg-[#344d34] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3d5a3d] transition-all shadow-[0_10px_15px_-3px_rgba(61,90,61,0.2),0_4px_6px_-2px_rgba(61,90,61,0.1)] disabled:opacity-70"
+                            className="mt-2 w-full flex justify-center py-3.5 px-4 rounded-xl text-base font-bold tracking-wide text-white bg-[#2D5A27] hover:bg-[#234a1f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2D5A27] transition-all shadow-lg shadow-[#2D5A27]/25 disabled:opacity-70"
                         >
                             {processing ? 'Memproses...' : 'Masuk ke Sistem'}
                         </button>
 
                         {/* Register Link */}
-                        <div className="mt-4 flex flex-col items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-slate-500">Belum memiliki akun? </span>
-                                <Link href={route('register')} className="text-sm font-bold text-[#3d5a3d] hover:underline">
+                        <div className="mt-2 flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-sm text-[#1a3318]/60">Belum memiliki akun?</span>
+                                <Link href={route('register')} className="text-sm font-bold text-[#2D5A27] hover:underline">
                                     Daftar akun baru
                                 </Link>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-slate-300">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clipRule="evenodd" />
-                                </svg>
-                                Sistem mendeteksi peran secara otomatis setelah login
                             </div>
                         </div>
                     </form>
                 </div>
 
-                {/* Footer Text */}
-                <div className="text-center font-medium text-xs text-slate-500 tracking-wider uppercase opacity-80 mt-2">
-                    © 2026 AgriSupport • Modern Farming Tech
+                {/* Footer */}
+                <div className="text-center text-xs text-white/50 font-medium tracking-wider uppercase">
+                    © 2026 AgriSupport • Smart Farming
                 </div>
             </div>
         </div>
