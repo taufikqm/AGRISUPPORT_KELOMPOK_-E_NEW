@@ -27,13 +27,30 @@ export default function DetailPanel({ area, onEdit, onDelete }) {
             const geoLayer = L.geoJSON(geojsonData, {
                 style: {
                     color: '#2D5A27',
-                    weight: 2,
+                    weight: 3,
                     fillColor: '#2D5A27',
-                    fillOpacity: 0.2,
+                    fillOpacity: 0.15,
+                    dashArray: '6 4',
                 },
             }).addTo(map);
 
-            map.fitBounds(geoLayer.getBounds(), { padding: [20, 20] });
+            // Add marker at the centroid of the GeoJSON bounds
+            const bounds = geoLayer.getBounds();
+            const center = bounds.getCenter();
+
+            const markerIcon = L.divIcon({
+                className: '',
+                html: `<svg width="20" height="26" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12Zm0 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" fill="#2D5A27"/>
+                    <circle cx="12" cy="12" r="3" fill="white"/>
+                </svg>`,
+                iconSize: [20, 26],
+                iconAnchor: [10, 26],
+            });
+
+            L.marker(center, { icon: markerIcon }).addTo(map);
+
+            map.fitBounds(bounds, { padding: [30, 30] });
         };
 
         initMap();
@@ -141,22 +158,17 @@ export default function DetailPanel({ area, onEdit, onDelete }) {
 
             {/* Map Preview */}
             <div className="rounded-xl overflow-hidden border border-gray-200 relative">
-                <div ref={mapContainerRef} className="w-full h-[200px] bg-gray-100" />
+                <div ref={mapContainerRef} className="w-full h-[250px] bg-gray-100" />
                 <div className="absolute bottom-3 left-3 flex items-center gap-2 z-[1000]">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold rounded-full">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        LIVE TRACKING ACTIVE
+                        BATAS WILAYAH AKTIF
                     </span>
                 </div>
                 <div className="absolute bottom-3 right-3 z-[1000]">
                     <span className="inline-flex items-center px-2.5 py-1 bg-white/90 backdrop-blur-sm text-gray-700 text-[10px] font-semibold rounded-full border border-gray-200">
                         Koordinat Terpeta
                     </span>
-                </div>
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000]">
-                    <div className="text-center">
-                        <svg className="w-6 h-6 text-[#2D5A27] mx-auto drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>
-                    </div>
                 </div>
             </div>
         </div>
