@@ -20,18 +20,20 @@ export default function AdminHeader({ title, onMenuClick }) {
                 )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
                 <AdminNotificationBell />
 
+                <div className="hidden sm:block h-7 w-px bg-slate-700"></div>
+
                 <div className="flex items-center gap-2.5">
-                    <div className="hidden sm:block text-right">
+                    <div className="hidden sm:block text-right leading-tight">
                         <p className="text-sm font-semibold text-white leading-none">
                             {auth?.user?.name ?? 'Admin'}
                         </p>
                         <p className="text-xs text-emerald-400 font-medium mt-0.5">Administrator</p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                        <span className="text-emerald-400 text-xs font-bold uppercase">
+                    <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                        <span className="text-emerald-400 text-sm font-bold uppercase">
                             {auth?.user?.name?.charAt(0) ?? 'A'}
                         </span>
                     </div>
