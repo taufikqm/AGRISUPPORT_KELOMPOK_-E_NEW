@@ -146,7 +146,7 @@ export default function UserManagement({ users, filters = {}, detail = null }) {
 
                 {/* Tabel */}
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto scrollbar-slim">
                         <table dusk="pengguna-table" className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wide">
@@ -218,7 +218,7 @@ export default function UserManagement({ users, filters = {}, detail = null }) {
             {/* ── Modal Detail (lengkap) ── */}
             {detailRow && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8">
-                    <div dusk="modal-detail-pengguna" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[88vh] overflow-y-auto">
+                    <div dusk="modal-detail-pengguna" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[88vh] overflow-y-auto scrollbar-slim">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-5 gap-3">
                             <div className="flex items-center gap-3">
