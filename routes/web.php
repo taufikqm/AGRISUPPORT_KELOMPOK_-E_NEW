@@ -107,9 +107,8 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::patch('/pengguna/{user}/status', [UserManagementController::class, 'toggleStatus'])->name('pengguna.toggle-status');
         Route::delete('/pengguna/{user}', [UserManagementController::class, 'destroy'])->name('pengguna.destroy');
 
-        // Manajemen Lahan & Observasi — AGS-91
+        // Manajemen Lahan — AGS-91
         Route::get('/lahan', [LandManagementController::class, 'index'])->name('lahan.index');
-        Route::get('/lahan/{area}', [LandManagementController::class, 'show'])->name('lahan.show');
         Route::put('/lahan/{area}', [LandManagementController::class, 'update'])->name('lahan.update');
         Route::delete('/lahan/{area}', [LandManagementController::class, 'destroy'])->name('lahan.destroy');
 
