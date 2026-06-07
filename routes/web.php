@@ -127,7 +127,6 @@ Route::middleware(['auth', 'verified', 'admin'])
 
         // Peta Risiko Global — AGS-93
         Route::get('/peta-risiko', [GlobalRiskMapController::class, 'index'])->name('peta-risiko.index');
-        Route::get('/api/peta-risiko', [GlobalRiskMapController::class, 'getData'])->name('api.peta-risiko');
 
         // Riwayat Aktivitas & Laporan — AGS-94
         Route::get('/laporan', [ActivityLogController::class, 'index'])->name('laporan.index');
