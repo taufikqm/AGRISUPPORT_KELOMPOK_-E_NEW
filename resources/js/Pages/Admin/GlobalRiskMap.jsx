@@ -201,7 +201,7 @@ export default function GlobalRiskMap({ areas = [], riskSummary = {}, totalPetan
                 </div>
 
                 {/* Kartu ringkasan — klik untuk filter level */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                     {cards.map((c) => {
                         const active = activeLevels.has(c.key);
                         const meta = LEVEL_META[c.key];
@@ -210,13 +210,18 @@ export default function GlobalRiskMap({ areas = [], riskSummary = {}, totalPetan
                                 key={c.key}
                                 dusk={`kartu-risiko-${c.key}`}
                                 onClick={() => toggleLevel(c.key)}
-                                className={`text-left rounded-2xl border p-4 transition-all ${active ? 'bg-slate-900 border-slate-700' : 'bg-slate-900/40 border-slate-800 opacity-50'}`}
+                                style={active ? { borderLeftColor: meta.color } : {}}
+                                className={`flex items-center justify-between gap-3 text-left rounded-xl border border-l-2 px-3.5 py-2.5 transition-all ${
+                                    active
+                                        ? 'bg-slate-900 border-slate-700'
+                                        : 'bg-slate-900/40 border-slate-800 opacity-40'
+                                }`}
                             >
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="w-3 h-3 rounded-sm" style={{ background: meta.color }} />
-                                    <span className="text-xs text-slate-400">{c.label}</span>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: meta.color }} />
+                                    <span className="text-xs text-slate-400 truncate">{c.label}</span>
                                 </div>
-                                <p className="text-2xl font-bold text-white">{summary[c.key] ?? 0}</p>
+                                <span className="text-lg font-bold text-white shrink-0">{summary[c.key] ?? 0}</span>
                             </button>
                         );
                     })}
