@@ -1,0 +1,1 @@
+import{j as t,H as a}from"./app-DrmlJoRN.js";import{A as i}from"./AdminLayout-WPQiNPnm.js";function l({auth:s,logs:e,petaniList:r,filters:o}){return t.jsxs(i,{title:"Laporan Aktivitas",currentRoute:"admin.laporan.index",children:[t.jsx(a,{title:"Laporan Aktivitas"}),t.jsx("div",{className:"py-8 px-4 sm:px-6 lg:px-8"})]})}export{l as default};

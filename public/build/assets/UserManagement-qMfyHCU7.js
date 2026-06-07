@@ -1,1 +1,0 @@
-import{j as e,H as a}from"./app-k8PLMNSW.js";import{A as n}from"./AdminLayout-6zsZCyaw.js";function d({auth:s,users:t,filters:r,user:u,lands:i}){return e.jsxs(n,{title:"Manajemen Pengguna",currentRoute:"admin.pengguna.index",children:[e.jsx(a,{title:"Manajemen Pengguna"}),e.jsx("div",{className:"py-8 px-4 sm:px-6 lg:px-8"})]})}export{d as default};

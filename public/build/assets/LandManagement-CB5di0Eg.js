@@ -1,1 +1,0 @@
-import{j as a,H as e}from"./app-k8PLMNSW.js";import{A as t}from"./AdminLayout-6zsZCyaw.js";function l({auth:n,areas:s,petaniList:i,filters:r,area:m,observations:o}){return a.jsxs(t,{title:"Manajemen Lahan",currentRoute:"admin.lahan.index",children:[a.jsx(e,{title:"Manajemen Lahan"}),a.jsx("div",{className:"py-8 px-4 sm:px-6 lg:px-8"})]})}export{l as default};
