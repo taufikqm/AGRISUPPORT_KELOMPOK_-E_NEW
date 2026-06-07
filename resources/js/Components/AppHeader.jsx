@@ -5,7 +5,7 @@ export default function AppHeader({ title, badge, onMenuClick, headerActions }) 
     const { auth } = usePage().props;
 
     return (
-        <header className="h-[60px] bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-20">
+        <header className="sticky top-0 h-[60px] bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-30">
             {/* Left: Burger (Mobile) + Page Title + Badge */}
             <div className="flex items-center gap-3 min-w-0">
                 <button 
@@ -41,11 +41,19 @@ export default function AppHeader({ title, badge, onMenuClick, headerActions }) 
                         <p className="text-[12px] font-bold text-gray-800 leading-tight truncate max-w-[100px]">{auth?.user?.name || 'Petani'}</p>
                         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide leading-none">Petani</p>
                     </div>
-                    <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#2D5A27]/10 flex items-center justify-center border border-[#2D5A27]/20">
-                        <svg className="w-5 h-5 text-[#2D5A27]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                        </svg>
-                    </div>
+                    {auth?.user?.profile_picture ? (
+                        <img 
+                            src={`/storage/${auth.user.profile_picture}`} 
+                            alt={auth.user.name} 
+                            className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover border border-[#2D5A27]/20"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#2D5A27]/10 flex items-center justify-center border border-[#2D5A27]/20">
+                            <svg className="w-5 h-5 text-[#2D5A27]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
+                        </div>
+                    )}
                 </div>
             </div>
         </header>
