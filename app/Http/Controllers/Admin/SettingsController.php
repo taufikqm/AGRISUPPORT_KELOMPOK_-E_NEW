@@ -3,47 +3,60 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Inertia\Response;
 
 /**
- * ============================================================
- * STUB: Admin\SettingsController — Pengaturan Admin (AGS-96)
- * ============================================================
- * ASSIGNEE : Taufik
- * BRANCH   : feature/AGS-96-pengaturan-admin
+ * Pengaturan Admin — AGS-96.
  *
- * FILE TERKAIT:
- *   - resources/js/Pages/Admin/Settings.jsx
+ * index()          — halaman pengaturan: 2 section (Informasi Profil + Ubah Password).
+ * update()         — simpan perubahan nama & email admin.
+ * updatePassword() — ganti password admin (validasi password saat ini).
  *
- * ROUTES (routes/web.php — prefix /admin):
- *   GET /admin/pengaturan → index()
- *   PUT /admin/pengaturan → update()
- *
- * CATATAN:
- *   - Pengaturan bisa disimpan di tabel 'settings' (buat migration jika perlu)
- *     atau di config file yang ditulis dinamis
- *   - Contoh pengaturan: nama aplikasi, logo, batas observasi per hari, dll
- *   - Admin bisa update password akun admin sendiri dari sini
- * ============================================================
+ * Catatan: tidak ada opsi hapus akun admin — penghapusan hanya via seeder/database.
  */
 class SettingsController extends Controller
 {
-    /**
-     * TODO: Tampilkan halaman pengaturan sistem.
-     * Gunakan Inertia::render('Admin/Settings', ['settings' => ...]).
-     */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
-        // TODO: Implementasi di sini
+        return Inertia::render('Admin/Settings', [
+            'status' => session('status'),
+        ]);
     }
 
-    /**
-     * TODO: Simpan perubahan pengaturan sistem.
-     * Return: back() dengan flash success.
-     */
-    public function update(Request $request)
+    /** Update informasi profil admin (nama & email). */
+    public function update(Request $request): RedirectResponse
     {
-        // TODO: Implementasi di sini
+        $validated = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => [
+                'required', 'string', 'lowercase', 'email', 'max:255',
+                Rule::unique(User::class)->ignore($request->user()->id),
+            ],
+        ]);
+
+        $request->user()->update($validated);
+
+        return back()->with('status', 'profil-tersimpan');
+    }
+
+    /** Ganti password admin. */
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password'         => ['required', Password::defaults(), 'confirmed'],
+        ]);
+
+        $request->user()->update([
+            'password' => $validated['password'],
+        ]);
+
+        return back()->with('status', 'password-tersimpan');
     }
 }
