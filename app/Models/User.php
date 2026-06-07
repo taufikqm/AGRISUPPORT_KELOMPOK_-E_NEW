@@ -24,6 +24,7 @@ class User extends Authenticatable
         'phone_number',
         'password',
         'role',
+        'is_active',
     ];
 
     /**
@@ -46,6 +47,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function agriculturalAreas()
+    {
+        return $this->hasMany(AgriculturalArea::class);
+    }
+
+    public function fieldObservations()
+    {
+        return $this->hasMany(FieldObservation::class);
     }
 }
