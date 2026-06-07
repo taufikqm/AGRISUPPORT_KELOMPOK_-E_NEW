@@ -56,6 +56,7 @@ class ActivityLogController extends Controller
         $actQuery = \Illuminate\Support\Facades\DB::table('action_logs')
             ->join('users', 'action_logs.user_id', '=', 'users.id')
             ->leftJoin('agricultural_areas', 'action_logs.agricultural_area_id', '=', 'agricultural_areas.id')
+            ->leftJoin('recommendations', 'action_logs.recommendation_id', '=', 'recommendations.id')
             ->select(
                 'action_logs.id',
                 'action_logs.user_id',
@@ -63,7 +64,7 @@ class ActivityLogController extends Controller
                 \Illuminate\Support\Facades\DB::raw("COALESCE(agricultural_areas.name, '-') as area_name"),
                 'action_logs.action_type',
                 'action_logs.performed_at',
-                'action_logs.detail',
+                \Illuminate\Support\Facades\DB::raw("COALESCE(action_logs.detail, COALESCE(recommendations.title, 'Jadwal/Tindakan Lainnya')) as detail"),
                 'action_logs.old_values',
                 'action_logs.new_values'
             );
