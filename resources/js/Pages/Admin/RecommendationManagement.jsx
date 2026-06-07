@@ -139,19 +139,19 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wide">
-                                    <th className="px-5 py-3 text-left font-semibold">Tanggal</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Petani</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Lahan</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Rekomendasi</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Urgensi</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Status</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Aksi</th>
+                                    <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Tanggal</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Petani</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Lahan</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Rekomendasi</th>
+                                    <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Urgensi</th>
+                                    <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Status</th>
+                                    <th className="px-4 py-3 text-left font-semibold sticky right-0 bg-slate-900">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
                                 {logs.data.length === 0 ? (
                                     <tr>
-                                        <td dusk="empty-state" colSpan={7} className="px-5 py-12 text-center text-slate-500">
+                                        <td dusk="empty-state" colSpan={7} className="px-4 py-12 text-center text-slate-500">
                                             Belum ada data rekomendasi.
                                         </td>
                                     </tr>
@@ -166,27 +166,23 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
 
                                     return (
                                         <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
-                                            <td className="px-5 py-3 text-slate-300 whitespace-nowrap">
-                                                {new Date(log.performed_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            <td className="px-4 py-3 text-slate-400 whitespace-nowrap text-xs">
+                                                {new Date(log.performed_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
                                             </td>
-                                            <td className="px-5 py-3">
-                                                <p className="text-white font-medium">{log.user?.name ?? '—'}</p>
-                                                <p className="text-xs text-slate-500">{log.user?.email}</p>
+                                            <td className="px-4 py-3 text-white font-medium whitespace-nowrap">
+                                                {log.user?.name ?? '—'}
                                             </td>
-                                            <td className="px-5 py-3 text-slate-300">{lahan}</td>
-                                            <td className="px-5 py-3 max-w-xs">
+                                            <td className="px-4 py-3 text-slate-300 whitespace-nowrap">{lahan}</td>
+                                            <td className="px-4 py-3 max-w-[260px]">
                                                 <p className="text-white font-medium truncate">{log.recommendation?.title ?? '—'}</p>
-                                                <p className="text-xs text-slate-500 truncate max-w-[200px]">
-                                                    {log.recommendation?.description}
-                                                </p>
                                             </td>
-                                            <td className="px-5 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <Badge label={urgency} colorClass={colorCls} />
                                             </td>
-                                            <td className="px-5 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <Badge label={STATUS_LABEL[log.action_type] ?? log.action_type} colorClass={statusCls} />
                                             </td>
-                                            <td className="px-5 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900 group-hover:bg-slate-800/40">
                                                 {isManual ? (
                                                     <div className="flex gap-2">
                                                         <button
