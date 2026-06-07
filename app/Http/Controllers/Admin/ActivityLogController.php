@@ -48,13 +48,14 @@ class ActivityLogController extends Controller
                 'agricultural_areas.name as area_name',
                 \Illuminate\Support\Facades\DB::raw("'observasi' as action_type"),
                 'field_observations.observation_date as performed_at',
-                \Illuminate\Support\Facades\DB::raw("CONCAT('Observasi: Curah hujan ', COALESCE(field_observations.weather_precip_mm, 0), ' mm') as detail")
+                \Illuminate\Support\Facades\DB::raw("CONCAT('Observasi: Curah hujan ', COALESCE(field_observations.weather_precip_mm, 0), ' mm') as detail"),
+                \Illuminate\Support\Facades\DB::raw("NULL as old_values"),
+                \Illuminate\Support\Facades\DB::raw("NULL as new_values")
             );
 
         $actQuery = \Illuminate\Support\Facades\DB::table('action_logs')
             ->join('users', 'action_logs.user_id', '=', 'users.id')
             ->leftJoin('agricultural_areas', 'action_logs.agricultural_area_id', '=', 'agricultural_areas.id')
-            ->leftJoin('recommendations', 'action_logs.recommendation_id', '=', 'recommendations.id')
             ->select(
                 'action_logs.id',
                 'action_logs.user_id',
@@ -62,12 +63,15 @@ class ActivityLogController extends Controller
                 \Illuminate\Support\Facades\DB::raw("COALESCE(agricultural_areas.name, '-') as area_name"),
                 'action_logs.action_type',
                 'action_logs.performed_at',
-                \Illuminate\Support\Facades\DB::raw("COALESCE(recommendations.title, 'Jadwal/Tindakan Lainnya') as detail")
+                'action_logs.detail',
+                'action_logs.old_values',
+                'action_logs.new_values'
             );
 
         if ($request->filled('user_id')) {
-            $obsQuery->where('field_observations.user_id', $request->user_id);
-            $actQuery->where('action_logs.user_id', $request->user_id);
+            $userIds = is_array($request->user_id) ? $request->user_id : explode(',', $request->user_id);
+            $obsQuery->whereIn('field_observations.user_id', $userIds);
+            $actQuery->whereIn('action_logs.user_id', $userIds);
         }
         
         if ($request->filled('date_from')) {
@@ -121,12 +125,14 @@ class ActivityLogController extends Controller
         $grouped = $data->groupBy('date');
         $chartData = [];
         foreach ($grouped as $date => $items) {
-            $entry = ['date' => $date, 'observasi' => 0, 'tindakan' => 0];
+            $entry = ['date' => $date, 'observasi' => 0, 'tindakan' => 0, 'sistem' => 0];
             foreach ($items as $item) {
                 if ($item->action_type === 'observasi') {
                     $entry['observasi'] += $item->total;
-                } else {
+                } elseif ($item->action_type === 'completion') {
                     $entry['tindakan'] += $item->total;
+                } else {
+                    $entry['sistem'] += $item->total;
                 }
             }
             $chartData[] = $entry;

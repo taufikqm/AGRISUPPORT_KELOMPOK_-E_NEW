@@ -13,6 +13,8 @@ class ActionLog extends Model
 
     protected $casts = [
         'performed_at' => 'datetime',
+        'old_values' => 'array',
+        'new_values' => 'array',
     ];
 
     public function user()

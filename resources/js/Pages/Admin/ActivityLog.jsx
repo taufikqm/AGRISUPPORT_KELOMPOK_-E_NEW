@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function ActivityLog({ auth, logs, petaniList, filters }) {
     const [queryParams, setQueryParams] = useState({
-        user_id: filters.user_id || '',
+        user_id: filters.user_id ? filters.user_id.split(',') : [],
         date_from: filters.date_from || '',
         date_to: filters.date_to || ''
     });
@@ -17,7 +17,8 @@ export default function ActivityLog({ auth, logs, petaniList, filters }) {
 
     useEffect(() => {
         // Fetch chart data
-        const query = new URLSearchParams(queryParams).toString();
+        const queryPayload = { ...queryParams, user_id: queryParams.user_id.join(',') };
+        const query = new URLSearchParams(queryPayload).toString();
         fetch(route('admin.api.laporan') + '?' + query)
             .then(res => res.json())
             .then(data => setChartData(data.chart_data || []));
@@ -28,17 +29,35 @@ export default function ActivityLog({ auth, logs, petaniList, filters }) {
         setQueryParams(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleUserChange = (e) => {
+        const options = e.target.options;
+        const selectedValues = [];
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].selected) {
+                selectedValues.push(options[i].value);
+            }
+        }
+        setQueryParams(prev => ({ ...prev, user_id: selectedValues }));
+    };
+
     const applyFilters = () => {
-        router.get(route('admin.laporan.index'), queryParams, {
+        const queryPayload = { ...queryParams, user_id: queryParams.user_id.join(',') };
+        router.get(route('admin.laporan.index'), queryPayload, {
             preserveState: true,
             preserveScroll: true,
         });
     };
 
     const handleExportCsv = () => {
-        const query = new URLSearchParams(queryParams).toString();
+        const queryPayload = { ...queryParams, user_id: queryParams.user_id.join(',') };
+        const query = new URLSearchParams(queryPayload).toString();
         window.location.href = route('admin.laporan.export') + '?' + query;
     };
+
+    // Calculate Summary
+    const totalObservasi = chartData.reduce((sum, item) => sum + (item.observasi || 0), 0);
+    const totalTindakan = chartData.reduce((sum, item) => sum + (item.tindakan || 0), 0);
+    const totalSistem = chartData.reduce((sum, item) => sum + (item.sistem || 0), 0);
 
     return (
         <AdminLayout title="Laporan Aktivitas" currentRoute="admin.laporan.index">
@@ -52,16 +71,17 @@ export default function ActivityLog({ auth, logs, petaniList, filters }) {
                             <select
                                 id="user_id"
                                 name="user_id"
+                                multiple
                                 value={queryParams.user_id}
-                                onChange={handleFilterChange}
-                                className="w-full border-slate-200 focus:border-green-500 focus:ring-green-500 rounded-xl shadow-sm transition-all"
+                                onChange={handleUserChange}
+                                className="w-full border-slate-200 focus:border-green-500 focus:ring-green-500 rounded-xl shadow-sm transition-all h-24"
                                 dusk="filter-petani-log"
                             >
-                                <option value="">Semua Petani</option>
                                 {petaniList.map(p => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </select>
+                            <span className="text-xs text-slate-400 mt-1 block">Tahan Ctrl/Cmd untuk pilih banyak</span>
                         </div>
                         <div className="w-full sm:w-40">
                             <InputLabel htmlFor="date_from" value="Dari Tanggal" className="text-slate-500 mb-1" />
@@ -107,6 +127,26 @@ export default function ActivityLog({ auth, logs, petaniList, filters }) {
                     </button>
                 </div>
 
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                        <div className="text-slate-500 text-sm font-medium mb-1">Total Aktivitas</div>
+                        <div className="text-3xl font-bold text-slate-800">{logs.total}</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                        <div className="text-slate-500 text-sm font-medium mb-1">Observasi Lahan</div>
+                        <div className="text-3xl font-bold text-blue-600">{totalObservasi}</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                        <div className="text-slate-500 text-sm font-medium mb-1">Selesai Tindakan</div>
+                        <div className="text-3xl font-bold text-green-600">{totalTindakan}</div>
+                    </div>
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                        <div className="text-slate-500 text-sm font-medium mb-1">Aktivitas Sistem</div>
+                        <div className="text-3xl font-bold text-amber-500">{totalSistem}</div>
+                    </div>
+                </div>
+
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-6">Tren Aktivitas Platform</h3>
                     <div className="h-72 w-full">
@@ -144,6 +184,15 @@ export default function ActivityLog({ auth, logs, petaniList, filters }) {
                                         name="Rekomendasi / Lainnya"
                                         dataKey="tindakan" 
                                         stroke="#10b981" 
+                                        strokeWidth={3}
+                                        dot={{ r: 4, strokeWidth: 2 }}
+                                        activeDot={{ r: 6 }}
+                                    />
+                                    <Line 
+                                        type="monotone" 
+                                        name="Aktivitas Sistem"
+                                        dataKey="sistem" 
+                                        stroke="#f59e0b" 
                                         strokeWidth={3}
                                         dot={{ r: 4, strokeWidth: 2 }}
                                         activeDot={{ r: 6 }}
@@ -196,13 +245,39 @@ export default function ActivityLog({ auth, logs, petaniList, filters }) {
                                                         ? 'bg-blue-100 text-blue-800'
                                                         : log.action_type === 'completion'
                                                             ? 'bg-green-100 text-green-800'
-                                                            : 'bg-slate-100 text-slate-800'
+                                                            : 'bg-amber-100 text-amber-800'
                                                 }`}>
-                                                    {log.action_type === 'completion' ? 'Selesai Rekomendasi' : log.action_type}
+                                                    {log.action_type === 'completion' ? 'Selesai Rekomendasi' : log.action_type.replace('_', ' ')}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-slate-600">
                                                 {log.detail}
+                                                {log.new_values && (
+                                                    <div className="mt-3 text-xs bg-slate-50 p-3 rounded-lg border border-slate-100 overflow-x-auto">
+                                                        <div className="font-semibold text-slate-700 mb-2">Perubahan Data:</div>
+                                                        {Object.keys(typeof log.new_values === 'string' ? JSON.parse(log.new_values) : log.new_values).map(key => {
+                                                            const newValueStr = String((typeof log.new_values === 'string' ? JSON.parse(log.new_values) : log.new_values)[key]);
+                                                            const oldValuesObj = typeof log.old_values === 'string' ? JSON.parse(log.old_values) : (log.old_values || {});
+                                                            const oldValueStr = oldValuesObj[key] !== undefined ? String(oldValuesObj[key]) : null;
+                                                            
+                                                            // Ignore system columns
+                                                            if (['updated_at', 'created_at'].includes(key)) return null;
+
+                                                            return (
+                                                                <div key={key} className="flex gap-2 items-center border-b border-slate-100 last:border-0 py-1">
+                                                                    <span className="font-mono text-slate-500 w-24 truncate" title={key}>{key}:</span>
+                                                                    {oldValueStr !== null && oldValueStr !== newValueStr && (
+                                                                        <>
+                                                                            <span className="text-red-500 line-through truncate max-w-[150px]">{oldValueStr}</span>
+                                                                            <span className="text-slate-400">→</span>
+                                                                        </>
+                                                                    )}
+                                                                    <span className="text-green-600 font-medium truncate max-w-[150px]">{newValueStr}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     ))

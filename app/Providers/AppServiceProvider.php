@@ -25,5 +25,25 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') === 'production' || isset($_ENV['VERCEL'])) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+            \App\Models\ActionLog::create([
+                'user_id' => $event->user->id,
+                'action_type' => 'auth_login',
+                'detail' => 'User berhasil login dari IP: ' . request()->ip(),
+                'performed_at' => now(),
+            ]);
+        });
+
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Logout::class, function ($event) {
+            if ($event->user) {
+                \App\Models\ActionLog::create([
+                    'user_id' => $event->user->id,
+                    'action_type' => 'auth_logout',
+                    'detail' => 'User melakukan logout dari IP: ' . request()->ip(),
+                    'performed_at' => now(),
+                ]);
+            }
+        });
     }
 }
