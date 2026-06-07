@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\ActionLog;
+use App\Models\AgriculturalArea;
+use App\Models\Recommendation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -15,7 +18,7 @@ class AdminRecommendationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_dapat_akses_manajemen_rekomendasi(): void
+    public function test_admin_dapat_akses_halaman_manajemen_rekomendasi(): void
     {
         $admin = User::factory()->admin()->create();
 
@@ -24,62 +27,119 @@ class AdminRecommendationTest extends TestCase
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/RecommendationManagement')
-                ->has('recommendations')
+                ->has('logs')
+                ->has('petani')
+                ->has('areas')
             );
     }
 
-    public function test_admin_dapat_tambah_template_rekomendasi(): void
+    public function test_admin_dapat_tambah_rekomendasi_manual(): void
     {
-        $admin = User::factory()->admin()->create();
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        $area   = AgriculturalArea::factory()->for($petani)->create();
 
         $this->actingAs($admin)
             ->post(route('admin.rekomendasi.store'), [
-                'title'       => 'Atasi Banjir Ringan',
-                'description' => 'Perbaiki saluran drainase sekitar lahan.',
-                'category'    => 'banjir',
-                'risk_type'   => 'flood',
+                'user_id'     => $petani->id,
+                'area_id'     => $area->id,
+                'description' => 'Segera perbaiki drainase lahan sebelum musim hujan.',
             ])
             ->assertRedirect();
 
-        $this->assertDatabaseHas('recommendations', ['title' => 'Atasi Banjir Ringan']);
+        $this->assertDatabaseHas('recommendations', [
+            'category' => 'Manual',
+            'description' => 'Segera perbaiki drainase lahan sebelum musim hujan.',
+        ]);
+        $this->assertDatabaseHas('action_logs', [
+            'user_id'              => $petani->id,
+            'agricultural_area_id' => $area->id,
+            'action_type'          => 'manual',
+        ]);
     }
 
-    public function test_filter_rekomendasi_berdasarkan_kategori(): void
+    public function test_filter_berdasarkan_petani_hanya_tampil_log_petani_tersebut(): void
     {
-        $admin = User::factory()->admin()->create();
-        // TODO: buat beberapa rekomendasi dengan kategori berbeda
+        $admin   = User::factory()->admin()->create();
+        $petani1 = User::factory()->create(['role' => 'petani']);
+        $petani2 = User::factory()->create(['role' => 'petani']);
+        $rec     = Recommendation::create([
+            'category' => 'Manual', 'title' => 'Test', 'description' => 'desc', 'urgency' => 'TINGGI', 'color' => 'blue',
+        ]);
+
+        ActionLog::create(['user_id' => $petani1->id, 'recommendation_id' => $rec->id, 'action_type' => 'manual', 'performed_at' => now()]);
+        ActionLog::create(['user_id' => $petani2->id, 'recommendation_id' => $rec->id, 'action_type' => 'manual', 'performed_at' => now()]);
 
         $this->actingAs($admin)
-            ->get(route('admin.rekomendasi.index', ['category' => 'banjir']))
-            ->assertStatus(200);
-        // TODO: assert hanya kategori banjir yang tampil
+            ->get(route('admin.rekomendasi.index', ['petani' => $petani1->id]))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->where('logs.data.0.user_id', $petani1->id)
+                ->where('logs.total', 1)
+            );
     }
 
-    public function test_admin_dapat_edit_template_rekomendasi(): void
+    public function test_filter_berdasarkan_status_sistem_hanya_tampil_completion(): void
     {
-        $admin = User::factory()->admin()->create();
-        // TODO: create recommendation dulu
-        // $rec = Recommendation::factory()->create();
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        $rec    = Recommendation::create([
+            'category' => 'Penyakit', 'title' => 'Rekomendasi Sistem', 'description' => 'desc', 'urgency' => 'SEGERA', 'color' => 'red',
+        ]);
 
-        // $this->actingAs($admin)
-        //     ->put(route('admin.rekomendasi.update', $rec->id), [...])
-        //     ->assertRedirect();
-        $this->assertTrue(true); // placeholder
+        ActionLog::create(['user_id' => $petani->id, 'recommendation_id' => $rec->id, 'action_type' => 'completion', 'performed_at' => now()]);
+        ActionLog::create(['user_id' => $petani->id, 'recommendation_id' => $rec->id, 'action_type' => 'manual', 'performed_at' => now()]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.rekomendasi.index', ['status' => 'completion']))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page->where('logs.total', 1));
     }
 
-    public function test_admin_dapat_hapus_template_rekomendasi(): void
+    public function test_store_gagal_jika_deskripsi_kosong(): void
     {
-        $admin = User::factory()->admin()->create();
-        // TODO: create recommendation dulu, lalu hapus
-        $this->assertTrue(true); // placeholder
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        $area   = AgriculturalArea::factory()->for($petani)->create();
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.rekomendasi.store'), [
+                'user_id'     => $petani->id,
+                'area_id'     => $area->id,
+                'description' => '',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('description');
     }
 
-    public function test_petani_tidak_bisa_akses_manajemen_rekomendasi_admin(): void
+    public function test_store_gagal_jika_lahan_bukan_milik_petani(): void
     {
-        $farmer = User::factory()->create(['role' => 'petani']);
+        $admin   = User::factory()->admin()->create();
+        $petani1 = User::factory()->create(['role' => 'petani']);
+        $petani2 = User::factory()->create(['role' => 'petani']);
+        $area    = AgriculturalArea::factory()->for($petani2)->create();
 
-        $this->actingAs($farmer)
+        $this->actingAs($admin)
+            ->post(route('admin.rekomendasi.store'), [
+                'user_id'     => $petani1->id,
+                'area_id'     => $area->id,
+                'description' => 'Test rekomendasi.',
+            ])
+            ->assertSessionHasErrors('area_id');
+    }
+
+    public function test_petani_tidak_bisa_akses_halaman_manajemen_rekomendasi(): void
+    {
+        $petani = User::factory()->create(['role' => 'petani']);
+
+        $this->actingAs($petani)
             ->get(route('admin.rekomendasi.index'))
-            ->assertStatus(403);
+            ->assertRedirect();
+    }
+
+    public function test_guest_diarahkan_ke_login(): void
+    {
+        $this->get(route('admin.rekomendasi.index'))
+            ->assertRedirect();
     }
 }
