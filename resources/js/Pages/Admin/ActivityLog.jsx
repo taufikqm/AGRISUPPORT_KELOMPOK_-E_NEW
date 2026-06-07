@@ -121,6 +121,7 @@ export default function ActivityLog({ auth, logs, petaniList, filters }) {
                                         axisLine={{ stroke: '#cbd5e1' }}
                                     />
                                     <YAxis 
+                                        allowDecimals={false}
                                         tick={{ fill: '#64748b', fontSize: 12 }}
                                         tickLine={false}
                                         axisLine={false}
