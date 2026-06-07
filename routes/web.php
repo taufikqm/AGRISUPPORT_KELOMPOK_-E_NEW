@@ -114,6 +114,7 @@ Route::middleware(['auth', 'verified', 'admin'])
 
         // Manajemen Rekomendasi — AGS-92
         Route::get('/rekomendasi', [RecommendationManagementController::class, 'index'])->name('rekomendasi.index');
+        Route::post('/rekomendasi/peringatkan', [RecommendationManagementController::class, 'warn'])->name('rekomendasi.warn');
         Route::post('/rekomendasi', [RecommendationManagementController::class, 'store'])->name('rekomendasi.store');
         Route::put('/rekomendasi/{id}', [RecommendationManagementController::class, 'update'])->name('rekomendasi.update');
         Route::delete('/rekomendasi/{id}', [RecommendationManagementController::class, 'destroy'])->name('rekomendasi.destroy');
