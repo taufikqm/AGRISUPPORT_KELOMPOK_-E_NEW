@@ -26,59 +26,79 @@ class AdminGlobalRiskMapTest extends TestCase
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/GlobalRiskMap')
-                ->has('petaniList')
+                ->has('areas')
+                ->has('riskSummary')
+                ->has('petani')
             );
     }
 
-    public function test_api_peta_risiko_mengembalikan_semua_lahan_semua_petani(): void
+    public function test_petani_tidak_bisa_akses_peta_risiko_global(): void
     {
-        $admin   = User::factory()->admin()->create();
-        $farmer1 = User::factory()->create();
-        $farmer2 = User::factory()->create();
-        AgriculturalArea::factory()->for($farmer1)->count(2)->create();
-        AgriculturalArea::factory()->for($farmer2)->count(3)->create();
-
-        $this->actingAs($admin)
-            ->getJson(route('admin.api.peta-risiko'))
-            ->assertStatus(200)
-            ->assertJsonStructure(['type', 'features']);
+        $this->actingAs(User::factory()->create(['role' => 'petani']))
+            ->get(route('admin.peta-risiko.index'))
+            ->assertRedirect(route('dashboard'));
     }
 
-    public function test_risk_level_dihitung_benar_di_peta_global(): void
+    public function test_peta_menampilkan_lahan_semua_petani_dengan_pemilik_dan_geojson(): void
+    {
+        $admin   = User::factory()->admin()->create();
+        $petani1 = User::factory()->create(['role' => 'petani', 'name' => 'Budi Tani']);
+        $petani2 = User::factory()->create(['role' => 'petani']);
+        AgriculturalArea::factory()->for($petani1)->create();
+        AgriculturalArea::factory()->for($petani2)->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.peta-risiko.index'))
+            ->assertInertia(fn ($page) => $page
+                ->has('areas', 2)
+                ->where('totalPetani', 2)
+                ->where('areas.0.owner', fn ($owner) => is_string($owner) && $owner !== '')
+                ->where('areas.0.geojson', fn ($g) => $g !== null)
+            );
+    }
+
+    public function test_lahan_tanpa_observasi_dihitung_belum_ada_data(): void
     {
         $admin  = User::factory()->admin()->create();
-        $farmer = User::factory()->create();
-        $area   = AgriculturalArea::factory()->for($farmer)->create();
-        FieldObservation::factory()->forArea($area)->create([
-            'crop_condition' => 'Kritis',
-        ]);
+        $petani = User::factory()->create(['role' => 'petani']);
+        AgriculturalArea::factory()->for($petani)->create();
 
         $this->actingAs($admin)
-            ->getJson(route('admin.api.peta-risiko'))
-            ->assertStatus(200);
-        // TODO: assert features[0].properties.risk_level === 'tinggi'
+            ->get(route('admin.peta-risiko.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('riskSummary.belum', 1)
+                ->where('areas.0.risk_level', null)
+            );
     }
 
-    public function test_filter_by_petani_berfungsi(): void
+    public function test_lahan_dengan_observasi_punya_level_dan_skor_risiko(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        $area   = AgriculturalArea::factory()->for($petani)->create();
+        FieldObservation::factory()->forArea($area)->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.peta-risiko.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('areas.0.risk_level', fn ($lvl) => in_array($lvl, ['tinggi', 'sedang', 'rendah'], true))
+                ->where('areas.0.score', fn ($s) => is_int($s))
+            );
+    }
+
+    public function test_filter_berdasarkan_petani(): void
     {
         $admin   = User::factory()->admin()->create();
-        $farmer1 = User::factory()->create();
-        $farmer2 = User::factory()->create();
-        AgriculturalArea::factory()->for($farmer1)->count(2)->create();
-        AgriculturalArea::factory()->for($farmer2)->count(3)->create();
+        $petani1 = User::factory()->create(['role' => 'petani']);
+        $petani2 = User::factory()->create(['role' => 'petani']);
+        AgriculturalArea::factory()->for($petani1)->create();
+        AgriculturalArea::factory()->for($petani2)->create();
 
         $this->actingAs($admin)
-            ->getJson(route('admin.api.peta-risiko', ['user_id' => $farmer1->id]))
-            ->assertStatus(200);
-        // TODO: assert count features === 2
-    }
-
-    public function test_petani_tidak_bisa_akses_peta_risiko_global_admin(): void
-    {
-        $farmer = User::factory()->create(['role' => 'petani']);
-
-        $this->actingAs($farmer)
-            ->get(route('admin.peta-risiko.index'))
-            ->assertStatus(403);
+            ->get(route('admin.peta-risiko.index', ['petani' => $petani1->id]))
+            ->assertInertia(fn ($page) => $page
+                ->has('areas', 1)
+                ->where('areas.0.owner_id', $petani1->id)
+            );
     }
 }
