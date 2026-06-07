@@ -166,7 +166,12 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                                         : 'text-slate-400 bg-slate-500/10 border-slate-500/30';
 
                                     return (
-                                        <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                                        <tr
+                                            key={log.id}
+                                            dusk={`row-rekomendasi-${log.id}`}
+                                            onClick={() => setDetailTarget(log)}
+                                            className="hover:bg-slate-800/40 transition-colors cursor-pointer"
+                                        >
                                             <td className="px-4 py-3 text-slate-400 whitespace-nowrap text-xs">
                                                 {new Date(log.performed_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
                                             </td>
@@ -184,35 +189,27 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                                                 <Badge label={STATUS_LABEL[log.action_type] ?? log.action_type} colorClass={statusCls} />
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900">
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        dusk={`btn-detail-rekomendasi-${log.id}`}
-                                                        onClick={() => setDetailTarget(log)}
-                                                        className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-                                                    >
-                                                        Detail
-                                                    </button>
-                                                    {isManual && (
-                                                        <>
-                                                            <span className="text-slate-700">|</span>
-                                                            <button
-                                                                dusk={`btn-edit-rekomendasi-${log.id}`}
-                                                                onClick={() => openEdit(log)}
-                                                                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <span className="text-slate-700">|</span>
-                                                            <button
-                                                                dusk={`btn-hapus-rekomendasi-${log.id}`}
-                                                                onClick={() => confirmDelete(log)}
-                                                                className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors"
-                                                            >
-                                                                Hapus
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
+                                                {isManual ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            dusk={`btn-edit-rekomendasi-${log.id}`}
+                                                            onClick={(e) => { e.stopPropagation(); openEdit(log); }}
+                                                            className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <span className="text-slate-700">|</span>
+                                                        <button
+                                                            dusk={`btn-hapus-rekomendasi-${log.id}`}
+                                                            onClick={(e) => { e.stopPropagation(); confirmDelete(log); }}
+                                                            className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors"
+                                                        >
+                                                            Hapus
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-slate-600">—</span>
+                                                )}
                                             </td>
                                         </tr>
                                     );
