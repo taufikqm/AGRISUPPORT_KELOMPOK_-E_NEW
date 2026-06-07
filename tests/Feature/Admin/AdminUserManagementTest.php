@@ -88,6 +88,38 @@ class AdminUserManagementTest extends TestCase
             );
     }
 
+    /** Detail lengkap: profil, statistik, daftar lahan, kondisi terkini */
+    public function test_detail_pengguna_menyajikan_data_lengkap(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $petani = User::factory()->create(['role' => 'petani']);
+        $area   = AgriculturalArea::factory()->for($petani)->create(['area_size' => 2.5]);
+        FieldObservation::factory()->forArea($area)->create([
+            'observation_date' => '2026-05-20',
+            'crop_condition'   => 'Baik',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.pengguna.index', ['detail_id' => $petani->id]))
+            ->assertInertia(fn ($page) => $page
+                ->where('detail.profile.id', $petani->id)
+                ->where('detail.stats.lands_count', 1)
+                ->where('detail.stats.observations_count', 1)
+                ->where('detail.lands.0.observations_count', 1)
+                ->where('detail.latest_observation.crop_condition', 'Baik')
+            );
+    }
+
+    public function test_detail_null_tanpa_detail_id(): void
+    {
+        $admin = User::factory()->admin()->create();
+        User::factory()->create(['role' => 'petani']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.pengguna.index'))
+            ->assertInertia(fn ($page) => $page->where('detail', null));
+    }
+
     // ── Update ───────────────────────────────────────────────────────────────────
 
     /** TC-05 */

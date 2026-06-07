@@ -35,11 +35,12 @@ function StatusBadge({ active }) {
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Belum ada';
 
-export default function UserManagement({ users, filters = {} }) {
+export default function UserManagement({ users, filters = {}, detail = null }) {
     const { flash = {} } = usePage().props;
 
     const [search,        setSearch]        = useState(filters.search ?? '');
-    const [detailTarget,  setDetailTarget]  = useState(null);
+    const [detailRow,     setDetailRow]     = useState(null);   // baris yang diklik (header instan)
+    const [detailLoading, setDetailLoading] = useState(false);
     const [editTarget,    setEditTarget]    = useState(null);
     const [deleteTarget,  setDeleteTarget]  = useState(null);
     const [confirmAksi,   setConfirmAksi]   = useState(null); // {type:'reset'|'toggle', user}
@@ -53,6 +54,19 @@ export default function UserManagement({ users, filters = {} }) {
         router.get(route('admin.pengguna.index'), { ...filters, status: value || undefined }, { preserveState: true, replace: true });
     };
     const resetFilter = () => { setSearch(''); router.get(route('admin.pengguna.index')); };
+
+    /* ── Detail (lazy load via Inertia partial) ── */
+    const openDetail = (u) => {
+        setDetailRow(u);
+        setDetailLoading(true);
+        router.reload({
+            only: ['detail'],
+            data: { detail_id: u.id },
+            preserveScroll: true,
+            onFinish: () => setDetailLoading(false),
+        });
+    };
+    const closeDetail = () => setDetailRow(null);
 
     /* ── Edit ── */
     const editForm = useForm({ name: '', email: '', phone_number: '' });
@@ -160,7 +174,7 @@ export default function UserManagement({ users, filters = {} }) {
                                         <td className="px-4 py-3"><StatusBadge active={u.is_active} /></td>
                                         <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900">
                                             <div className="flex items-center gap-2 justify-end">
-                                                <button dusk={`btn-detail-pengguna-${u.id}`} onClick={() => setDetailTarget(u)}
+                                                <button dusk={`btn-detail-pengguna-${u.id}`} onClick={() => openDetail(u)}
                                                     className="text-xs font-semibold text-slate-300 hover:text-white">Detail</button>
                                                 <span className="text-slate-700">|</span>
                                                 <button dusk={`btn-edit-pengguna-${u.id}`} onClick={() => openEdit(u)}
@@ -201,46 +215,123 @@ export default function UserManagement({ users, filters = {} }) {
                 </div>
             </div>
 
-            {/* ── Modal Detail ── */}
-            {detailTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-                    <div dusk="modal-detail-pengguna" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                        <div className="flex items-start justify-between mb-4 gap-3">
+            {/* ── Modal Detail (lengkap) ── */}
+            {detailRow && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8">
+                    <div dusk="modal-detail-pengguna" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[88vh] overflow-y-auto">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-5 gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-11 h-11 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-                                    <span className="text-emerald-400 font-bold uppercase">{detailTarget.name?.charAt(0)}</span>
+                                <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                                    <span className="text-emerald-400 font-bold text-lg uppercase">{detailRow.name?.charAt(0)}</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-base font-bold text-white leading-tight">{detailTarget.name}</h2>
-                                    <StatusBadge active={detailTarget.is_active} />
+                                    <h2 className="text-lg font-bold text-white leading-tight">{detailRow.name}</h2>
+                                    <div className="mt-1"><StatusBadge active={detailRow.is_active} /></div>
                                 </div>
                             </div>
-                            <button onClick={() => setDetailTarget(null)} className="text-slate-400 hover:text-white text-xl leading-none">×</button>
+                            <button onClick={closeDetail} className="text-slate-400 hover:text-white text-xl leading-none shrink-0">×</button>
                         </div>
-                        <div className="space-y-3 text-sm">
-                            <div className="bg-slate-800 rounded-xl p-3">
-                                <p className="text-xs text-slate-500 mb-0.5">Email</p>
-                                <p className="text-slate-200">{detailTarget.email}</p>
+
+                        {(detailLoading || !detail || detail.profile?.id !== detailRow.id) ? (
+                            <div className="py-10 text-center text-slate-500 text-sm">Memuat detail…</div>
+                        ) : (
+                            <div className="space-y-5 text-sm">
+                                {/* A. Profil Akun */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Profil Akun</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-slate-800 rounded-xl p-3 col-span-2 sm:col-span-1">
+                                            <p className="text-xs text-slate-500 mb-0.5">Email</p>
+                                            <p className="text-slate-200 break-all">{detail.profile.email}</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 col-span-2 sm:col-span-1">
+                                            <p className="text-xs text-slate-500 mb-0.5">No. Telepon</p>
+                                            <p className="text-slate-200">{detail.profile.phone_number || 'Belum ada'}</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3">
+                                            <p className="text-xs text-slate-500 mb-0.5">Email Terverifikasi</p>
+                                            <p className={detail.profile.email_verified_at ? 'text-emerald-400 font-medium' : 'text-amber-400 font-medium'}>
+                                                {detail.profile.email_verified_at ? '✓ Terverifikasi' : 'Belum'}
+                                            </p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3">
+                                            <p className="text-xs text-slate-500 mb-0.5">Terdaftar Sejak</p>
+                                            <p className="text-slate-200">{fmtDate(detail.profile.created_at)}</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* B. Ringkasan Statistik */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Ringkasan Aktivitas</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.lands_count}</p>
+                                            <p className="text-xs text-slate-500">Lahan</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.total_area}</p>
+                                            <p className="text-xs text-slate-500">Total Ha</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.observations_count}</p>
+                                            <p className="text-xs text-slate-500">Observasi</p>
+                                        </div>
+                                        <div className="bg-slate-800 rounded-xl p-3 text-center">
+                                            <p className="text-xl font-bold text-white">{detail.stats.completed_recommendations}</p>
+                                            <p className="text-xs text-slate-500">Rekomendasi Selesai</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">Observasi terakhir: <span className="text-slate-300">{fmtDate(detail.stats.last_observation_date)}</span></p>
+                                </section>
+
+                                {/* D. Kondisi Terkini */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Kondisi Terkini Lahan</h3>
+                                    {detail.latest_observation ? (
+                                        <div className="bg-slate-800 rounded-xl p-3">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-slate-300 font-medium">{detail.latest_observation.area_name}</span>
+                                                <span className="text-xs text-slate-500">{fmtDate(detail.latest_observation.observation_date)}</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                                <div className="flex justify-between"><span className="text-slate-500">Kondisi Tanaman</span><span className="text-slate-200">{detail.latest_observation.crop_condition ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Kelembapan Tanah</span><span className="text-slate-200">{detail.latest_observation.soil_moisture ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Genangan Air</span><span className="text-slate-200">{detail.latest_observation.water_puddle ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Indikasi Hama</span><span className="text-slate-200">{detail.latest_observation.pest_indication ?? '—'}</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-500">Indikasi Penyakit</span><span className="text-slate-200">{detail.latest_observation.disease_indication ?? '—'}</span></div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-500 bg-slate-800 rounded-xl p-3">Belum ada observasi.</p>
+                                    )}
+                                </section>
+
+                                {/* C. Daftar Lahan */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Daftar Lahan ({detail.lands.length})</h3>
+                                    {detail.lands.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {detail.lands.map((l) => (
+                                                <div key={l.id} className="bg-slate-800 rounded-xl p-3 flex items-center justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-slate-200 font-medium truncate">{l.name}</p>
+                                                        <p className="text-xs text-slate-500 truncate">{l.location_name || 'Lokasi belum diatur'} · {l.soil_type || 'Jenis tanah —'}</p>
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <p className="text-slate-300 text-xs">{l.area_size ?? '—'} ha</p>
+                                                        <p className="text-xs text-slate-500">{l.observations_count} observasi</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-slate-500 bg-slate-800 rounded-xl p-3">Petani belum memiliki lahan.</p>
+                                    )}
+                                </section>
                             </div>
-                            <div className="bg-slate-800 rounded-xl p-3">
-                                <p className="text-xs text-slate-500 mb-0.5">No. Telepon</p>
-                                <p className="text-slate-200">{detailTarget.phone_number || 'Belum ada'}</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-slate-800 rounded-xl p-3">
-                                    <p className="text-xs text-slate-500 mb-0.5">Jumlah Lahan</p>
-                                    <p className="text-white font-semibold">{detailTarget.agricultural_areas_count} lahan</p>
-                                </div>
-                                <div className="bg-slate-800 rounded-xl p-3">
-                                    <p className="text-xs text-slate-500 mb-0.5">Observasi Terakhir</p>
-                                    <p className="text-white font-semibold">{fmtDate(detailTarget.last_observation_date)}</p>
-                                </div>
-                            </div>
-                            <div className="bg-slate-800 rounded-xl p-3">
-                                <p className="text-xs text-slate-500 mb-0.5">Terdaftar Sejak</p>
-                                <p className="text-slate-200">{fmtDate(detailTarget.created_at)}</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             )}

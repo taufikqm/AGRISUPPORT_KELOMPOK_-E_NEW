@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActionLog;
+use App\Models\AgriculturalArea;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,10 +61,79 @@ class UserManagementController extends Controller
                 'last_observation_date'  => $u->field_observations_max_observation_date,
             ]);
 
+        // Detail lengkap satu petani — lazy, hanya dihitung saat diminta
+        // (partial reload ?detail_id=) agar tabel utama tetap ringan.
+        $detailId = $request->integer('detail_id') ?: null;
+
         return Inertia::render('Admin/UserManagement', [
             'users'   => $users,
             'filters' => $filters,
+            'detail'  => fn () => $detailId ? $this->buildUserDetail($detailId) : null,
         ]);
+    }
+
+    /** Susun detail lengkap petani untuk modal (profil, statistik, lahan, kondisi terkini). */
+    private function buildUserDetail(int $userId): ?array
+    {
+        $user = User::where('role', 'petani')->find($userId);
+        if (! $user) {
+            return null;
+        }
+
+        $lands = AgriculturalArea::where('user_id', $user->id)
+            ->withCount('fieldObservations')
+            ->orderBy('name')
+            ->get(['id', 'name', 'location_name', 'area_size', 'soil_type']);
+
+        $latest = $user->fieldObservations()
+            ->with('agriculturalArea:id,name')
+            ->latest('observation_date')
+            ->first(['id', 'agricultural_area_id', 'observation_date', 'crop_condition', 'soil_moisture', 'water_puddle', 'pest_indication', 'disease_indication']);
+
+        $completedRecommendations = ActionLog::where('user_id', $user->id)
+            ->where('action_type', 'completion')
+            ->count();
+
+        return [
+            // A. Profil akun
+            'profile' => [
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'email'             => $user->email,
+                'phone_number'      => $user->phone_number,
+                'is_active'         => $user->is_active,
+                'email_verified_at' => $user->email_verified_at,
+                'created_at'        => $user->created_at,
+                'updated_at'        => $user->updated_at,
+            ],
+            // B. Ringkasan statistik
+            'stats' => [
+                'lands_count'              => $lands->count(),
+                'total_area'              => round((float) $lands->sum('area_size'), 2),
+                'observations_count'      => $user->fieldObservations()->count(),
+                'completed_recommendations' => $completedRecommendations,
+                'last_observation_date'   => $latest?->observation_date,
+            ],
+            // C. Daftar lahan
+            'lands' => $lands->map(fn ($l) => [
+                'id'                 => $l->id,
+                'name'               => $l->name,
+                'location_name'      => $l->location_name,
+                'area_size'          => $l->area_size,
+                'soil_type'          => $l->soil_type,
+                'observations_count' => $l->field_observations_count,
+            ]),
+            // D. Kondisi terkini (observasi terakhir)
+            'latest_observation' => $latest ? [
+                'area_name'          => $latest->agriculturalArea->name ?? '—',
+                'observation_date'   => $latest->observation_date,
+                'crop_condition'     => $latest->crop_condition,
+                'soil_moisture'      => $latest->soil_moisture,
+                'water_puddle'       => $latest->water_puddle,
+                'pest_indication'    => $latest->pest_indication,
+                'disease_indication' => $latest->disease_indication,
+            ] : null,
+        ];
     }
 
     /** Update data profil petani. */
