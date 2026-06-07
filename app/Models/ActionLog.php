@@ -29,4 +29,9 @@ class ActionLog extends Model
     {
         return $this->belongsTo(Recommendation::class);
     }
+
+    public function agriculturalArea()
+    {
+        return $this->belongsTo(AgriculturalArea::class);
+    }
 }

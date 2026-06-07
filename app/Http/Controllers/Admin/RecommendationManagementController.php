@@ -3,70 +3,88 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActionLog;
+use App\Models\AgriculturalArea;
+use App\Models\Recommendation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 /**
- * ============================================================
- * STUB: Admin\RecommendationManagementController — Manajemen Rekomendasi (AGS-92)
- * ============================================================
- * ASSIGNEE : Daenisty
- * BRANCH   : feature/AGS-92-manajemen-rekomendasi-admin
+ * Manajemen Rekomendasi (Admin) — AGS-92.
  *
- * FILE TERKAIT:
- *   - resources/js/Pages/Admin/RecommendationManagement.jsx
- *
- * MODEL:
- *   - App\Models\Recommendation (buat jika belum ada)
- *   - App\Models\ActionLog
- *
- * ROUTES (routes/web.php — prefix /admin):
- *   GET    /admin/rekomendasi       → index()
- *   POST   /admin/rekomendasi       → store()
- *   PUT    /admin/rekomendasi/{id}  → update()
- *   DELETE /admin/rekomendasi/{id}  → destroy()
- *
- * CATATAN:
- *   - Admin bisa lihat, tambah, edit, hapus template rekomendasi
- *   - Rekomendasi bisa di-filter by kategori (banjir, kekeringan, hama, dll)
- *   - Monitor action_logs: lihat rekomendasi mana yang dijalankan petani
- *   - Cek tabel 'recommendations' dan 'action_logs' di migration
- * ============================================================
+ * index()  — daftar action_logs yang punya recommendation_id (sistem + manual),
+ *            dengan filter petani & status.
+ * store()  — tambah rekomendasi manual dari admin ke petani tertentu.
  */
 class RecommendationManagementController extends Controller
 {
-    /**
-     * TODO: Tampilkan daftar template rekomendasi dengan filter kategori.
-     * Gunakan Inertia::render('Admin/RecommendationManagement', [...]).
-     */
+    /** Daftar semua rekomendasi yang sudah diberikan/dijalankan, dengan filter. */
     public function index(Request $request)
     {
-        // TODO: Implementasi di sini
+        $filters = $request->only(['petani', 'status']);
+
+        $query = ActionLog::query()
+            ->whereNotNull('recommendation_id')
+            ->with([
+                'user:id,name,email',
+                'recommendation:id,title,category,urgency,color',
+                'observation.agriculturalArea:id,name',
+                'agriculturalArea:id,name',
+            ])
+            ->latest('performed_at');
+
+        if ($filters['petani'] ?? null) {
+            $query->where('user_id', $filters['petani']);
+        }
+        if ($filters['status'] ?? null) {
+            $query->where('action_type', $filters['status']);
+        }
+
+        $logs   = $query->paginate(20)->withQueryString();
+        $petani = User::where('role', 'petani')->orderBy('name')->get(['id', 'name', 'email']);
+
+        return Inertia::render('Admin/RecommendationManagement', [
+            'logs'    => $logs,
+            'petani'  => $petani,
+            'filters' => $filters,
+        ]);
     }
 
     /**
-     * TODO: Tambah template rekomendasi baru.
-     * Validasi: title, description, category, risk_type.
+     * Simpan rekomendasi manual dari admin ke petani + lahan tertentu.
+     * Membuat record Recommendation (category=Manual) lalu ActionLog (action_type='manual').
      */
     public function store(Request $request)
     {
-        // TODO: Implementasi di sini
-    }
+        $validated = $request->validate([
+            'user_id'     => 'required|exists:users,id',
+            'area_id'     => 'required|exists:agricultural_areas,id',
+            'description' => 'required|string|max:1000',
+        ]);
 
-    /**
-     * TODO: Update template rekomendasi yang ada.
-     */
-    public function update(Request $request, int $id)
-    {
-        // TODO: Implementasi di sini
-    }
+        $area = AgriculturalArea::findOrFail($validated['area_id']);
+        if ($area->user_id !== (int) $validated['user_id']) {
+            return back()->withErrors(['area_id' => 'Lahan ini bukan milik petani yang dipilih.']);
+        }
 
-    /**
-     * TODO: Hapus template rekomendasi.
-     * Cek apakah rekomendasi masih digunakan di action_logs sebelum hapus.
-     */
-    public function destroy(int $id)
-    {
-        // TODO: Implementasi di sini
+        $rec = Recommendation::create([
+            'category'    => 'Manual',
+            'title'       => 'Rekomendasi Manual Admin',
+            'description' => $validated['description'],
+            'urgency'     => 'TINGGI',
+            'color'       => 'blue',
+        ]);
+
+        ActionLog::create([
+            'user_id'              => $validated['user_id'],
+            'observation_id'       => null,
+            'recommendation_id'    => $rec->id,
+            'agricultural_area_id' => $validated['area_id'],
+            'action_type'          => 'manual',
+            'performed_at'         => now(),
+        ]);
+
+        return back()->with('success', 'Rekomendasi manual berhasil dikirim ke petani.');
     }
 }
