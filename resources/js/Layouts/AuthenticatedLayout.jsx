@@ -7,7 +7,7 @@ export default function AuthenticatedLayout({ children, title, badge, currentRou
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     return (
-        <div className="theme-petani bg-[#F0F5F3] font-['Inter',sans-serif] min-h-screen flex overflow-x-hidden">
+        <div className="theme-petani bg-[#F0F5F3] font-['Inter',sans-serif] h-screen flex overflow-hidden">
             {/* Sidebar Component */}
             <AppSidebar 
                 currentRoute={currentRoute} 
@@ -18,7 +18,7 @@ export default function AuthenticatedLayout({ children, title, badge, currentRou
             />
 
             {/* Main Content Area */}
-            <div className={`flex flex-col flex-1 min-h-screen transition-all duration-300 ease-in-out
+            <div className={`flex flex-col flex-1 h-screen transition-all duration-300 ease-in-out
                 ${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-60'}`}
             >
                 <AppHeader 

@@ -47,21 +47,21 @@ export default function UpdatePasswordForm({ className = '' }) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Update Password
+                <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    Keamanan Akun
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Ensure your account is using a long, random password to stay
-                    secure.
+                <p className="text-sm text-gray-500">
+                    Pastikan akun Anda menggunakan password yang panjang, acak, dan unik agar tetap aman.
                 </p>
             </header>
 
-            <form onSubmit={updatePassword} className="mt-6 space-y-6">
+            <form onSubmit={updatePassword} className="mt-8 space-y-6">
                 <div>
                     <InputLabel
                         htmlFor="current_password"
-                        value="Current Password"
+                        value="Password Lama"
+                        className="text-gray-700 font-semibold"
                     />
 
                     <TextInput
@@ -72,8 +72,9 @@ export default function UpdatePasswordForm({ className = '' }) {
                             setData('current_password', e.target.value)
                         }
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full border-gray-300 text-gray-900 focus:border-[#263B36] focus:ring-[#263B36] rounded-xl shadow-sm"
                         autoComplete="current-password"
+                        placeholder="••••••••"
                     />
 
                     <InputError
@@ -83,7 +84,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="New Password" />
+                    <InputLabel htmlFor="password" value="Password Baru" className="text-gray-700 font-semibold" />
 
                     <TextInput
                         id="password"
@@ -91,8 +92,9 @@ export default function UpdatePasswordForm({ className = '' }) {
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full border-gray-300 text-gray-900 focus:border-[#263B36] focus:ring-[#263B36] rounded-xl shadow-sm"
                         autoComplete="new-password"
+                        placeholder="••••••••"
                     />
 
                     <InputError message={errors.password} className="mt-2" />
@@ -101,7 +103,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                 <div>
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Confirm Password"
+                        value="Konfirmasi Password Baru"
+                        className="text-gray-700 font-semibold"
                     />
 
                     <TextInput
@@ -111,8 +114,9 @@ export default function UpdatePasswordForm({ className = '' }) {
                             setData('password_confirmation', e.target.value)
                         }
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full border-gray-300 text-gray-900 focus:border-[#263B36] focus:ring-[#263B36] rounded-xl shadow-sm"
                         autoComplete="new-password"
+                        placeholder="••••••••"
                     />
 
                     <InputError
@@ -121,19 +125,24 @@ export default function UpdatePasswordForm({ className = '' }) {
                     />
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+                    <PrimaryButton disabled={processing} className="bg-[#263B36] hover:bg-[#1a2825] rounded-xl px-6 h-11 shadow-sm mt-4">
+                        Simpan Password
+                    </PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
+                        enter="transition ease-in-out duration-300"
+                        enterFrom="opacity-0 translate-y-1"
+                        leave="transition ease-in-out duration-300"
+                        leaveTo="opacity-0 translate-y-1"
                     >
-                        <p className="text-sm text-gray-600">
-                            Saved.
-                        </p>
+                        <div className="flex items-center text-sm text-[#263B36] bg-[#263B36]/10 px-3 py-1.5 rounded-lg border border-[#263B36]/20 mt-4">
+                            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Password diperbarui.
+                        </div>
                     </Transition>
                 </div>
             </form>

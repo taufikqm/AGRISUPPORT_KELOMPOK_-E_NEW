@@ -48,8 +48,8 @@ export default function WilayahLahan({ auth, areas = [] }) {
 
     return (
         <AuthenticatedLayout
-            user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Kelola Wilayah Lahan</h2>}
+            title="Kelola Wilayah Lahan"
+            currentRoute="wilayah-lahan.index"
         >
             <Head title="Wilayah Lahan" />
 
