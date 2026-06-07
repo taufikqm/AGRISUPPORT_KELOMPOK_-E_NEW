@@ -30,8 +30,9 @@ function Flash({ message }) {
 
 export default function RecommendationManagement({ logs, petani = [], areas = [], filters = {}, flash = {} }) {
     const [showAddModal,  setShowAddModal]  = useState(false);
-    const [editTarget,    setEditTarget]    = useState(null);   // { id, description }
-    const [deleteTarget,  setDeleteTarget]  = useState(null);   // { id, title }
+    const [editTarget,    setEditTarget]    = useState(null);
+    const [deleteTarget,  setDeleteTarget]  = useState(null);
+    const [detailTarget,  setDetailTarget]  = useState(null);   // log lengkap untuk modal detail
 
     /* ── Form tambah manual ─── */
     const addForm = useForm({ user_id: '', area_id: '', description: '' });
@@ -182,28 +183,36 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <Badge label={STATUS_LABEL[log.action_type] ?? log.action_type} colorClass={statusCls} />
                                             </td>
-                                            <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900 group-hover:bg-slate-800/40">
-                                                {isManual ? (
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            dusk={`btn-edit-rekomendasi-${log.id}`}
-                                                            onClick={() => openEdit(log)}
-                                                            className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <span className="text-slate-700">|</span>
-                                                        <button
-                                                            dusk={`btn-hapus-rekomendasi-${log.id}`}
-                                                            onClick={() => confirmDelete(log)}
-                                                            className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors"
-                                                        >
-                                                            Hapus
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-xs text-slate-600">—</span>
-                                                )}
+                                            <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        dusk={`btn-detail-rekomendasi-${log.id}`}
+                                                        onClick={() => setDetailTarget(log)}
+                                                        className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                                                    >
+                                                        Detail
+                                                    </button>
+                                                    {isManual && (
+                                                        <>
+                                                            <span className="text-slate-700">|</span>
+                                                            <button
+                                                                dusk={`btn-edit-rekomendasi-${log.id}`}
+                                                                onClick={() => openEdit(log)}
+                                                                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <span className="text-slate-700">|</span>
+                                                            <button
+                                                                dusk={`btn-hapus-rekomendasi-${log.id}`}
+                                                                onClick={() => confirmDelete(log)}
+                                                                className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors"
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     );
@@ -341,6 +350,77 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                     </div>
                 </div>
             )}
+
+            {/* ── Modal Detail ── */}
+            {detailTarget && (() => {
+                const rec    = detailTarget.recommendation;
+                const lahan  = detailTarget.agricultural_area?.name ?? detailTarget.observation?.agricultural_area?.name ?? '—';
+                const urgency   = rec?.urgency ?? '—';
+                const colorCls  = URGENCY_COLOR[urgency] ?? URGENCY_COLOR.RENDAH;
+                const isManual  = detailTarget.action_type === 'manual';
+                const statusCls = isManual ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' : 'text-slate-400 bg-slate-500/10 border-slate-500/30';
+                const steps     = rec?.details?.steps ?? [];
+
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                        <div dusk="modal-detail-rekomendasi" className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-start justify-between mb-4 gap-3">
+                                <h2 className="text-base font-bold text-white leading-snug">{rec?.title ?? 'Detail Rekomendasi'}</h2>
+                                <button onClick={() => setDetailTarget(null)} className="text-slate-400 hover:text-white text-xl leading-none shrink-0">×</button>
+                            </div>
+
+                            {/* Meta info */}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                <Badge label={urgency} colorClass={colorCls} />
+                                <Badge label={STATUS_LABEL[detailTarget.action_type] ?? detailTarget.action_type} colorClass={statusCls} />
+                                {rec?.category && <Badge label={rec.category} colorClass="text-slate-300 bg-slate-700/50 border-slate-600" />}
+                            </div>
+
+                            <div className="space-y-3 text-sm">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-slate-800 rounded-xl p-3">
+                                        <p className="text-xs text-slate-500 mb-0.5">Petani</p>
+                                        <p className="text-white font-medium">{detailTarget.user?.name ?? '—'}</p>
+                                        <p className="text-xs text-slate-500">{detailTarget.user?.email}</p>
+                                    </div>
+                                    <div className="bg-slate-800 rounded-xl p-3">
+                                        <p className="text-xs text-slate-500 mb-0.5">Lahan</p>
+                                        <p className="text-white font-medium">{lahan}</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-800 rounded-xl p-3">
+                                    <p className="text-xs text-slate-500 mb-1">Isi Rekomendasi</p>
+                                    <p className="text-slate-200 leading-relaxed">{rec?.description ?? '—'}</p>
+                                </div>
+
+                                {steps.length > 0 && (
+                                    <div className="bg-slate-800 rounded-xl p-3">
+                                        <p className="text-xs text-slate-500 mb-2">Langkah Tindakan</p>
+                                        <ol className="space-y-1.5">
+                                            {steps.map((s, i) => (
+                                                <li key={i} className="flex gap-2 text-slate-300">
+                                                    <span className="shrink-0 w-5 h-5 rounded-full bg-slate-700 text-slate-400 text-xs flex items-center justify-center font-bold">{i + 1}</span>
+                                                    <span className="leading-snug">{s}</span>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                )}
+
+                                <p className="text-xs text-slate-600 text-right">
+                                    {new Date(detailTarget.performed_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                </p>
+                            </div>
+
+                            <button onClick={() => setDetailTarget(null)}
+                                className="mt-5 w-full py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-800 transition-colors">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* ── Konfirmasi Hapus ── */}
             {deleteTarget && (
