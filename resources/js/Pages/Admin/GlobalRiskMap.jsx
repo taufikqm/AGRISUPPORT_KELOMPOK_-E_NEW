@@ -22,15 +22,22 @@ export default function GlobalRiskMap({ areas = [], riskSummary = {}, totalPetan
     const layersRef      = useRef({});
 
     const [activeLevels, setActiveLevels] = useState(() => new Set(LEGEND_ORDER));
+    const [searchQuery, setSearchQuery]   = useState('');
 
     const summary = { tinggi: 0, sedang: 0, rendah: 0, belum: 0, ...riskSummary };
     const areasWithGeom = areas.filter((a) => a.geojson);
+
+    const matchesSearch = (a) => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return true;
+        return a.name.toLowerCase().includes(q) || a.owner.toLowerCase().includes(q);
+    };
 
     // Daftar lahan diurut paling berisiko (untuk panel prioritas & fokus default).
     const ranked = [...areas].sort(
         (a, b) => (RISK_RANK[b.risk_level ?? 'belum'] - RISK_RANK[a.risk_level ?? 'belum']) || ((b.score ?? -1) - (a.score ?? -1))
     );
-    const visibleRanked = ranked.filter((a) => activeLevels.has(a.risk_level ?? 'belum'));
+    const visibleRanked = ranked.filter((a) => activeLevels.has(a.risk_level ?? 'belum') && matchesSearch(a));
 
     /* ── Build peta sekali (saat areas berubah) ── */
     useEffect(() => {
@@ -83,7 +90,7 @@ export default function GlobalRiskMap({ areas = [], riskSummary = {}, totalPetan
                 );
 
                 layer.addTo(map);
-                layersRef.current[area.id] = { layer, level: area.risk_level ?? 'belum' };
+                layersRef.current[area.id] = { layer, level: area.risk_level ?? 'belum', name: area.name, owner: area.owner };
             });
 
             const layers = Object.values(layersRef.current).map((x) => x.layer);
@@ -102,18 +109,21 @@ export default function GlobalRiskMap({ areas = [], riskSummary = {}, totalPetan
         };
     }, [areas]);
 
-    /* ── Toggle visibilitas layer sesuai filter level (tanpa rebuild peta) ── */
+    /* ── Toggle visibilitas layer sesuai filter level + search (tanpa rebuild peta) ── */
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
-        Object.values(layersRef.current).forEach(({ layer, level }) => {
-            if (activeLevels.has(level)) {
+        const q = searchQuery.trim().toLowerCase();
+        Object.values(layersRef.current).forEach(({ layer, level, name, owner }) => {
+            const matchLevel  = activeLevels.has(level);
+            const matchSearch = !q || name.toLowerCase().includes(q) || owner.toLowerCase().includes(q);
+            if (matchLevel && matchSearch) {
                 if (!map.hasLayer(layer)) map.addLayer(layer);
             } else if (map.hasLayer(layer)) {
                 map.removeLayer(layer);
             }
         });
-    }, [activeLevels]);
+    }, [activeLevels, searchQuery]);
 
     const toggleLevel = (lvl) => {
         setActiveLevels((prev) => {
@@ -162,6 +172,32 @@ export default function GlobalRiskMap({ areas = [], riskSummary = {}, totalPetan
                         <option value="">Semua Petani ({totalPetani})</option>
                         {petani.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
+                </div>
+
+                {/* Search bar */}
+                <div className="relative mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                    <input
+                        dusk="input-search-peta"
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Cari nama lahan atau petani…"
+                        className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                            aria-label="Hapus pencarian"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 {/* Kartu ringkasan — klik untuk filter level */}
@@ -219,7 +255,17 @@ export default function GlobalRiskMap({ areas = [], riskSummary = {}, totalPetan
                             <p className="text-xs text-slate-500 mb-3">Diurut dari risiko tertinggi. Klik untuk fokus di peta.</p>
                             <div className="flex-1 overflow-y-auto scrollbar-slim space-y-2 pr-1">
                                 {visibleRanked.length === 0 ? (
-                                    <p className="text-sm text-slate-500 text-center py-8">Tidak ada lahan pada filter ini.</p>
+                                    <div className="text-center py-8 px-2">
+                                        {searchQuery.trim() ? (
+                                            <>
+                                                <p className="text-sm text-slate-400">Tidak ditemukan hasil untuk</p>
+                                                <p className="text-sm font-semibold text-white mt-1">&ldquo;{searchQuery}&rdquo;</p>
+                                                <button onClick={() => setSearchQuery('')} className="mt-3 text-xs text-emerald-400 hover:text-emerald-300 underline">Hapus pencarian</button>
+                                            </>
+                                        ) : (
+                                            <p className="text-sm text-slate-500">Tidak ada lahan pada filter ini.</p>
+                                        )}
+                                    </div>
                                 ) : visibleRanked.map((a) => {
                                     const meta = LEVEL_META[a.risk_level ?? 'belum'];
                                     return (
