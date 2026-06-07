@@ -355,6 +355,15 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
             {detailTarget && (() => {
                 const rec    = detailTarget.recommendation;
                 const lahan  = detailTarget.agricultural_area?.name ?? detailTarget.observation?.agricultural_area?.name ?? '—';
+                const petaniNama = detailTarget.user?.name ?? '';
+
+                // Resolve template placeholders dari seeder ({{location}}, {{soil_type}}, dll.)
+                const resolveText = (text = '') => text
+                    .replace(/\{\{location\}\}/g, lahan)
+                    .replace(/\{\{soil_type\}\}/g, detailTarget.observation?.agriculturalArea?.soil_type ?? 'tidak diketahui')
+                    .replace(/\{\{disease\}\}/g, 'penyakit terdeteksi')
+                    .replace(/\{\{advice\}\}/g, '')
+                    .trim();
                 const urgency   = rec?.urgency ?? '—';
                 const colorCls  = URGENCY_COLOR[urgency] ?? URGENCY_COLOR.RENDAH;
                 const isManual  = detailTarget.action_type === 'manual';
@@ -391,7 +400,7 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
 
                                 <div className="bg-slate-800 rounded-xl p-3">
                                     <p className="text-xs text-slate-500 mb-1">Isi Rekomendasi</p>
-                                    <p className="text-slate-200 leading-relaxed">{rec?.description ?? '—'}</p>
+                                    <p className="text-slate-200 leading-relaxed">{resolveText(rec?.description) || '—'}</p>
                                 </div>
 
                                 {steps.length > 0 && (
@@ -401,7 +410,7 @@ export default function RecommendationManagement({ logs, petani = [], areas = []
                                             {steps.map((s, i) => (
                                                 <li key={i} className="flex gap-2 text-slate-300">
                                                     <span className="shrink-0 w-5 h-5 rounded-full bg-slate-700 text-slate-400 text-xs flex items-center justify-center font-bold">{i + 1}</span>
-                                                    <span className="leading-snug">{s}</span>
+                                                    <span className="leading-snug">{resolveText(s)}</span>
                                                 </li>
                                             ))}
                                         </ol>
