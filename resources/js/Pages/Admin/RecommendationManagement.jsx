@@ -1,5 +1,5 @@
 import { Head, useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 const STATUS_LABEL = { completion: 'Sistem', manual: 'Manual' };
@@ -20,10 +20,22 @@ function Badge({ label, colorClass }) {
 }
 
 function Flash({ message }) {
-    if (!message) return null;
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        if (!message) return;
+        setVisible(true);
+        const t = setTimeout(() => setVisible(false), 6000);
+        return () => clearTimeout(t);
+    }, [message]);
+
+    if (!message || !visible) return null;
+
     return (
-        <div className="mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-medium px-4 py-3">
-            {message}
+        <div className="mb-4 flex items-start gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-medium px-4 py-3">
+            <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">✓</span>
+            <span className="flex-1 leading-snug">{message}</span>
+            <button onClick={() => setVisible(false)} className="shrink-0 text-emerald-400/70 hover:text-emerald-200 text-lg leading-none">×</button>
         </div>
     );
 }
