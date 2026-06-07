@@ -72,8 +72,8 @@ class AdminUserManagementTest extends TestCase
             );
     }
 
-    /** TC-04 */
-    public function test_daftar_menampilkan_jumlah_lahan_dan_observasi_terakhir(): void
+    /** TC-04 — observasi terakhir tampil di tabel (jumlah lahan kini di detail) */
+    public function test_daftar_menampilkan_observasi_terakhir(): void
     {
         $admin  = User::factory()->admin()->create();
         $petani = User::factory()->create(['role' => 'petani']);
@@ -83,7 +83,6 @@ class AdminUserManagementTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.pengguna.index'))
             ->assertInertia(fn ($page) => $page
-                ->where('users.data.0.agricultural_areas_count', 1)
                 ->where('users.data.0.last_observation_date', fn ($d) => str_starts_with((string) $d, '2026-05-20'))
             );
     }

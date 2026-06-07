@@ -35,6 +35,28 @@ function StatusBadge({ active }) {
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Belum ada';
 
+function IconAction({ title, onClick, colorClass, dusk, children }) {
+    return (
+        <button
+            dusk={dusk}
+            onClick={onClick}
+            title={title}
+            aria-label={title}
+            className={`p-1.5 rounded-lg hover:bg-slate-800 transition-colors ${colorClass}`}
+        >
+            {children}
+        </button>
+    );
+}
+
+const icons = {
+    detail: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>,
+    edit:   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" /></svg>,
+    reset:  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" /></svg>,
+    power:  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" /></svg>,
+    trash:  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>,
+};
+
 export default function UserManagement({ users, filters = {}, detail = null }) {
     const { flash = {} } = usePage().props;
 
@@ -152,7 +174,6 @@ export default function UserManagement({ users, filters = {}, detail = null }) {
                                 <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wide">
                                     <th className="px-4 py-3 text-left font-semibold">Nama</th>
                                     <th className="px-4 py-3 text-left font-semibold">Email</th>
-                                    <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Lahan</th>
                                     <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Observasi Terakhir</th>
                                     <th className="px-4 py-3 text-left font-semibold">Status</th>
                                     <th className="px-4 py-3 text-right font-semibold sticky right-0 bg-slate-900">Aksi</th>
@@ -161,7 +182,7 @@ export default function UserManagement({ users, filters = {}, detail = null }) {
                             <tbody className="divide-y divide-slate-800">
                                 {users.data.length === 0 ? (
                                     <tr>
-                                        <td dusk="empty-state" colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                                        <td dusk="empty-state" colSpan={5} className="px-4 py-12 text-center text-slate-500">
                                             {filters.search ? 'Data petani tidak ditemukan.' : 'Belum ada data petani terdaftar.'}
                                         </td>
                                     </tr>
@@ -169,27 +190,20 @@ export default function UserManagement({ users, filters = {}, detail = null }) {
                                     <tr key={u.id} dusk={`pengguna-row-${u.id}`} className="hover:bg-slate-800/40 transition-colors">
                                         <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{u.name}</td>
                                         <td className="px-4 py-3 text-slate-300 whitespace-nowrap">{u.email}</td>
-                                        <td className="px-4 py-3 text-slate-300 whitespace-nowrap">{u.agricultural_areas_count} lahan</td>
                                         <td className="px-4 py-3 text-slate-400 whitespace-nowrap text-xs">{fmtDate(u.last_observation_date)}</td>
                                         <td className="px-4 py-3"><StatusBadge active={u.is_active} /></td>
                                         <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900">
-                                            <div className="flex items-center gap-2 justify-end">
-                                                <button dusk={`btn-detail-pengguna-${u.id}`} onClick={() => openDetail(u)}
-                                                    className="text-xs font-semibold text-slate-300 hover:text-white">Detail</button>
-                                                <span className="text-slate-700">|</span>
-                                                <button dusk={`btn-edit-pengguna-${u.id}`} onClick={() => openEdit(u)}
-                                                    className="text-xs font-semibold text-emerald-400 hover:text-emerald-300">Edit</button>
-                                                <span className="text-slate-700">|</span>
-                                                <button dusk={`btn-reset-pengguna-${u.id}`} onClick={() => setConfirmAksi({ type: 'reset', user: u })}
-                                                    className="text-xs font-semibold text-amber-400 hover:text-amber-300">Reset</button>
-                                                <span className="text-slate-700">|</span>
-                                                <button dusk={`btn-toggle-status-${u.id}`} onClick={() => setConfirmAksi({ type: 'toggle', user: u })}
-                                                    className={`text-xs font-semibold ${u.is_active ? 'text-orange-400 hover:text-orange-300' : 'text-emerald-400 hover:text-emerald-300'}`}>
-                                                    {u.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-                                                </button>
-                                                <span className="text-slate-700">|</span>
-                                                <button dusk={`btn-hapus-pengguna-${u.id}`} onClick={() => setDeleteTarget(u)}
-                                                    className="text-xs font-semibold text-red-400 hover:text-red-300">Hapus</button>
+                                            <div className="flex items-center gap-1 justify-end">
+                                                <IconAction dusk={`btn-detail-pengguna-${u.id}`} title="Detail" onClick={() => openDetail(u)}
+                                                    colorClass="text-slate-300 hover:text-white">{icons.detail}</IconAction>
+                                                <IconAction dusk={`btn-edit-pengguna-${u.id}`} title="Edit data" onClick={() => openEdit(u)}
+                                                    colorClass="text-emerald-400 hover:text-emerald-300">{icons.edit}</IconAction>
+                                                <IconAction dusk={`btn-reset-pengguna-${u.id}`} title="Reset password" onClick={() => setConfirmAksi({ type: 'reset', user: u })}
+                                                    colorClass="text-amber-400 hover:text-amber-300">{icons.reset}</IconAction>
+                                                <IconAction dusk={`btn-toggle-status-${u.id}`} title={u.is_active ? 'Nonaktifkan akun' : 'Aktifkan akun'} onClick={() => setConfirmAksi({ type: 'toggle', user: u })}
+                                                    colorClass={u.is_active ? 'text-orange-400 hover:text-orange-300' : 'text-emerald-400 hover:text-emerald-300'}>{icons.power}</IconAction>
+                                                <IconAction dusk={`btn-hapus-pengguna-${u.id}`} title="Hapus akun" onClick={() => setDeleteTarget(u)}
+                                                    colorClass="text-red-400 hover:text-red-300">{icons.trash}</IconAction>
                                             </div>
                                         </td>
                                     </tr>

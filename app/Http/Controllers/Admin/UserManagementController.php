@@ -31,7 +31,6 @@ class UserManagementController extends Controller
 
         $query = User::query()
             ->where('role', 'petani')
-            ->withCount('agriculturalAreas')
             ->withMax('fieldObservations', 'observation_date');
 
         if ($search = ($filters['search'] ?? null)) {
@@ -57,7 +56,6 @@ class UserManagementController extends Controller
                 'phone_number'           => $u->phone_number,
                 'is_active'              => $u->is_active,
                 'created_at'             => $u->created_at,
-                'agricultural_areas_count' => $u->agricultural_areas_count,
                 'last_observation_date'  => $u->field_observations_max_observation_date,
             ]);
 
