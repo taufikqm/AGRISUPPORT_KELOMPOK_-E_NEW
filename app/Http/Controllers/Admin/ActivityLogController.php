@@ -36,30 +36,144 @@ use Inertia\Inertia;
  */
 class ActivityLogController extends Controller
 {
-    /**
-     * TODO: Tampilkan halaman riwayat aktivitas dengan filter & pagination.
-     * Gunakan Inertia::render('Admin/ActivityLog', ['logs' => ..., 'filters' => ...]).
-     */
+    private function buildQuery(Request $request)
+    {
+        $obsQuery = \Illuminate\Support\Facades\DB::table('field_observations')
+            ->join('users', 'field_observations.user_id', '=', 'users.id')
+            ->join('agricultural_areas', 'field_observations.agricultural_area_id', '=', 'agricultural_areas.id')
+            ->select(
+                'field_observations.id',
+                'field_observations.user_id',
+                'users.name as user_name',
+                'agricultural_areas.name as area_name',
+                \Illuminate\Support\Facades\DB::raw("'observasi' as action_type"),
+                'field_observations.observation_date as performed_at',
+                \Illuminate\Support\Facades\DB::raw("CONCAT('Observasi: Curah hujan ', COALESCE(field_observations.weather_precip_mm, 0), ' mm') as detail"),
+                \Illuminate\Support\Facades\DB::raw("NULL as old_values"),
+                \Illuminate\Support\Facades\DB::raw("NULL as new_values")
+            );
+
+        $actQuery = \Illuminate\Support\Facades\DB::table('action_logs')
+            ->join('users', 'action_logs.user_id', '=', 'users.id')
+            ->leftJoin('agricultural_areas', 'action_logs.agricultural_area_id', '=', 'agricultural_areas.id')
+            ->leftJoin('recommendations', 'action_logs.recommendation_id', '=', 'recommendations.id')
+            ->select(
+                'action_logs.id',
+                'action_logs.user_id',
+                'users.name as user_name',
+                \Illuminate\Support\Facades\DB::raw("COALESCE(agricultural_areas.name, '-') as area_name"),
+                'action_logs.action_type',
+                'action_logs.performed_at',
+                \Illuminate\Support\Facades\DB::raw("COALESCE(action_logs.detail, COALESCE(recommendations.title, 'Jadwal/Tindakan Lainnya')) as detail"),
+                'action_logs.old_values',
+                'action_logs.new_values'
+            );
+
+        if ($request->filled('user_id')) {
+            $userIds = is_array($request->user_id) ? $request->user_id : explode(',', $request->user_id);
+            $obsQuery->whereIn('field_observations.user_id', $userIds);
+            $actQuery->whereIn('action_logs.user_id', $userIds);
+        }
+        
+        if ($request->filled('date_from')) {
+            $obsQuery->whereDate('field_observations.observation_date', '>=', $request->date_from);
+            $actQuery->whereDate('action_logs.performed_at', '>=', $request->date_from);
+        }
+        
+        if ($request->filled('date_to')) {
+            $obsQuery->whereDate('field_observations.observation_date', '<=', $request->date_to);
+            $actQuery->whereDate('action_logs.performed_at', '<=', $request->date_to);
+        }
+
+        $unionQuery = $obsQuery->unionAll($actQuery);
+
+        return \Illuminate\Support\Facades\DB::table(\Illuminate\Support\Facades\DB::raw("({$unionQuery->toSql()}) as activities"))
+            ->mergeBindings($unionQuery);
+    }
+
     public function index(Request $request)
     {
-        // TODO: Implementasi di sini
+        $activities = $this->buildQuery($request)
+            ->orderByDesc('performed_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        $petaniList = \App\Models\User::where('role', 'petani')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Admin/ActivityLog', [
+            'logs' => $activities,
+            'petaniList' => $petaniList,
+            'filters' => $request->only(['user_id', 'date_from', 'date_to']),
+        ]);
     }
 
-    /**
-     * TODO: API data aktivitas terformat untuk grafik.
-     * Return: response()->json(['daily' => [...], 'weekly' => [...]]).
-     */
     public function getData(Request $request)
     {
-        // TODO: Implementasi di sini
+        $data = $this->buildQuery($request)
+            ->select(
+                \Illuminate\Support\Facades\DB::raw("DATE(performed_at) as date"),
+                'action_type',
+                \Illuminate\Support\Facades\DB::raw("COUNT(*) as total")
+            )
+            ->groupBy('date', 'action_type')
+            ->orderBy('date')
+            ->get();
+
+        // Process data into a format suitable for Recharts
+        $grouped = $data->groupBy('date');
+        $chartData = [];
+        foreach ($grouped as $date => $items) {
+            $entry = ['date' => $date, 'observasi' => 0, 'tindakan' => 0, 'sistem' => 0];
+            foreach ($items as $item) {
+                if ($item->action_type === 'observasi') {
+                    $entry['observasi'] += $item->total;
+                } elseif ($item->action_type === 'completion') {
+                    $entry['tindakan'] += $item->total;
+                } else {
+                    $entry['sistem'] += $item->total;
+                }
+            }
+            $chartData[] = $entry;
+        }
+
+        return response()->json(['chart_data' => $chartData]);
     }
 
-    /**
-     * TODO: Export data aktivitas ke CSV.
-     * Return: response()->streamDownload() atau Storage file.
-     */
     public function exportCsv(Request $request)
     {
-        // TODO: Implementasi di sini
+        $activities = $this->buildQuery($request)
+            ->orderByDesc('performed_at')
+            ->get();
+
+        $filename = "laporan_aktivitas_" . date('Ymd_His') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function () use ($activities) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Tanggal', 'Petani', 'Lahan', 'Jenis Aktivitas', 'Detail']);
+
+            foreach ($activities as $row) {
+                fputcsv($file, [
+                    $row->performed_at,
+                    $row->user_name,
+                    $row->area_name,
+                    $row->action_type,
+                    $row->detail
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
     }
 }
