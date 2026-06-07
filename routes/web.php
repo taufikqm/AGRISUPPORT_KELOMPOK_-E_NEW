@@ -138,7 +138,8 @@ Route::middleware(['auth', 'verified', 'admin'])
 
         // Pengaturan Admin — AGS-96
         Route::get('/pengaturan', [AdminSettingsController::class, 'index'])->name('pengaturan.index');
-        Route::put('/pengaturan', [AdminSettingsController::class, 'update'])->name('pengaturan.update');
+        Route::patch('/pengaturan', [AdminSettingsController::class, 'update'])->name('pengaturan.update');
+        Route::put('/pengaturan/password', [AdminSettingsController::class, 'updatePassword'])->name('pengaturan.password');
     });
 
 require __DIR__.'/auth.php';
