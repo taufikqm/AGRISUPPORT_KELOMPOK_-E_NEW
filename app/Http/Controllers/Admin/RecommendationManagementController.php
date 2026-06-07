@@ -43,10 +43,14 @@ class RecommendationManagementController extends Controller
 
         $logs   = $query->paginate(20)->withQueryString();
         $petani = User::where('role', 'petani')->orderBy('name')->get(['id', 'name', 'email']);
+        $areas  = AgriculturalArea::whereIn('user_id', $petani->pluck('id'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'user_id']);
 
         return Inertia::render('Admin/RecommendationManagement', [
             'logs'    => $logs,
             'petani'  => $petani,
+            'areas'   => $areas,
             'filters' => $filters,
         ]);
     }
