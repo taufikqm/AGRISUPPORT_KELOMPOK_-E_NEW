@@ -7,19 +7,20 @@ use App\Models\ActionLog;
 use App\Models\AgriculturalArea;
 use App\Models\Recommendation;
 use App\Models\User;
+use App\Notifications\FarmerNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 /**
  * Manajemen Rekomendasi (Admin) — AGS-92.
  *
- * index()  — daftar action_logs yang punya recommendation_id (sistem + manual),
- *            dengan filter petani & status.
- * store()  — tambah rekomendasi manual dari admin ke petani tertentu.
+ * index()   — daftar action_logs ber-recommendation (sistem + manual), filter petani & status.
+ * store()   — tambah rekomendasi manual ke petani tertentu + kirim notifikasi in-app.
+ * update()  — edit isi rekomendasi manual (hanya action_type='manual').
+ * destroy() — hapus rekomendasi manual beserta Recommendation record-nya.
  */
 class RecommendationManagementController extends Controller
 {
-    /** Daftar semua rekomendasi yang sudah diberikan/dijalankan, dengan filter. */
     public function index(Request $request)
     {
         $filters = $request->only(['petani', 'status']);
@@ -28,7 +29,7 @@ class RecommendationManagementController extends Controller
             ->whereNotNull('recommendation_id')
             ->with([
                 'user:id,name,email',
-                'recommendation:id,title,category,urgency,color',
+                'recommendation:id,title,category,urgency,color,description',
                 'observation.agriculturalArea:id,name',
                 'agriculturalArea:id,name',
             ])
@@ -55,10 +56,6 @@ class RecommendationManagementController extends Controller
         ]);
     }
 
-    /**
-     * Simpan rekomendasi manual dari admin ke petani + lahan tertentu.
-     * Membuat record Recommendation (category=Manual) lalu ActionLog (action_type='manual').
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -89,6 +86,45 @@ class RecommendationManagementController extends Controller
             'performed_at'         => now(),
         ]);
 
+        // Notifikasi in-app ke petani penerima.
+        $petani = User::findOrFail($validated['user_id']);
+        $petani->notify(new FarmerNotification(
+            'rekomendasi_baru',
+            'Rekomendasi baru dari admin',
+            "Admin memberikan rekomendasi baru untuk lahan {$area->name}.",
+            route('rekomendasi-tindakan.index'),
+        ));
+
         return back()->with('success', 'Rekomendasi manual berhasil dikirim ke petani.');
+    }
+
+    /** Edit isi rekomendasi manual — hanya boleh untuk action_type='manual'. */
+    public function update(Request $request, int $id)
+    {
+        $log = ActionLog::where('id', $id)->where('action_type', 'manual')->firstOrFail();
+
+        $validated = $request->validate([
+            'description' => 'required|string|max:1000',
+        ]);
+
+        $log->recommendation->update(['description' => $validated['description']]);
+
+        return back()->with('success', 'Rekomendasi berhasil diperbarui.');
+    }
+
+    /** Hapus rekomendasi manual beserta record Recommendation-nya. */
+    public function destroy(int $id)
+    {
+        $log = ActionLog::where('id', $id)->where('action_type', 'manual')->firstOrFail();
+
+        $rec = $log->recommendation;
+        $log->delete();
+
+        // Hapus Recommendation hanya jika tidak ada log lain yang referensi.
+        if ($rec && ActionLog::where('recommendation_id', $rec->id)->doesntExist()) {
+            $rec->delete();
+        }
+
+        return back()->with('success', 'Rekomendasi berhasil dihapus.');
     }
 }
