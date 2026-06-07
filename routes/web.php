@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\LandManagementController;
+use App\Http\Controllers\Admin\ObservationManagementController;
 use App\Http\Controllers\Admin\RecommendationManagementController;
 use App\Http\Controllers\Admin\GlobalRiskMapController;
 use App\Http\Controllers\Admin\ActivityLogController;
@@ -111,6 +112,11 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::get('/lahan', [LandManagementController::class, 'index'])->name('lahan.index');
         Route::put('/lahan/{area}', [LandManagementController::class, 'update'])->name('lahan.update');
         Route::delete('/lahan/{area}', [LandManagementController::class, 'destroy'])->name('lahan.destroy');
+
+        // Manajemen Observasi (Admin)
+        Route::get('/observasi', [ObservationManagementController::class, 'index'])->name('observasi.index');
+        Route::put('/observasi/{observation}', [ObservationManagementController::class, 'update'])->name('observasi.update');
+        Route::delete('/observasi/{observation}', [ObservationManagementController::class, 'destroy'])->name('observasi.destroy');
 
         // Manajemen Rekomendasi — AGS-92
         Route::get('/rekomendasi', [RecommendationManagementController::class, 'index'])->name('rekomendasi.index');
