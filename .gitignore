@@ -33,6 +33,7 @@ CLAUDE.md
 docs/testing.md
 docs/database-mapping.md
 .env.dusk.local
+.env.dusk
 
 # Direktori lokal Claude Code
 /.claude
