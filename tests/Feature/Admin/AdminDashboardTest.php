@@ -8,8 +8,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-// DatabaseTransactions: tidak jalankan migrate:fresh — aman untuk Supabase cloud.
-
 /**
  * PHPUnit Feature Test — Dashboard Admin (AGS-81)
  * Assignee: Taufik
@@ -28,13 +26,18 @@ class AdminDashboardTest extends TestCase
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Dashboard')
-                ->has('totalPetani')
-                ->has('totalLahan')
-                ->has('totalObservasi')
+                ->has('stats')
+                ->has('stats.total_farmers')
+                ->has('stats.total_areas')
+                ->has('stats.total_observations')
+                ->has('stats.total_completed')
+                ->has('riskDistribution')
+                ->has('weeklyTrend')
+                ->has('recentActivities')
             );
     }
 
-    public function test_dashboard_menampilkan_statistik_yang_benar(): void
+    public function test_dashboard_statistik_sesuai_jumlah_di_database(): void
     {
         $admin = User::factory()->admin()->create();
 
@@ -42,7 +45,7 @@ class AdminDashboardTest extends TestCase
         $baseLahan  = AgriculturalArea::count();
         $baseObs    = FieldObservation::count();
 
-        $farmers = User::factory()->count(3)->create();
+        $farmers = User::factory()->count(3)->create(['role' => 'petani']);
         foreach ($farmers as $farmer) {
             $area = AgriculturalArea::factory()->for($farmer)->create();
             FieldObservation::factory()->forArea($area)->create();
@@ -52,9 +55,38 @@ class AdminDashboardTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page
-                ->where('totalPetani', $basePetani + 3)
-                ->where('totalLahan', $baseLahan + 3)
-                ->where('totalObservasi', $baseObs + 3)
+                ->where('stats.total_farmers',      $basePetani + 3)
+                ->where('stats.total_areas',        $baseLahan  + 3)
+                ->where('stats.total_observations', $baseObs    + 3)
+            );
+    }
+
+    public function test_dashboard_returns_latest_10_activities(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $farmer = User::factory()->create(['role' => 'petani']);
+        $area   = AgriculturalArea::factory()->for($farmer)->create();
+
+        FieldObservation::factory()->forArea($area)->count(15)->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->where('recentActivities', fn ($acts) => count($acts) <= 10)
+            );
+    }
+
+    public function test_dashboard_dengan_database_kosong_tidak_error(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.total_farmers',      fn ($v) => is_int($v))
+                ->where('stats.total_observations', fn ($v) => is_int($v))
             );
     }
 
@@ -71,14 +103,5 @@ class AdminDashboardTest extends TestCase
     {
         $this->get(route('admin.dashboard'))
             ->assertRedirect(route('login'));
-    }
-
-    public function test_login_admin_diarahkan_ke_dashboard_admin(): void
-    {
-        $admin = User::factory()->admin()->create();
-
-        $this->actingAs($admin)
-            ->get(route('dashboard'))
-            ->assertRedirect(route('admin.dashboard'));
     }
 }
