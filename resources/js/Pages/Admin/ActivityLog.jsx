@@ -4,10 +4,46 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const BADGE = {
-    observasi:  { label: 'Observasi Lahan',       cls: 'bg-blue-500/20 text-blue-400' },
-    completion: { label: 'Selesai Rekomendasi',   cls: 'bg-emerald-500/20 text-emerald-400' },
+    observasi:                  { label: 'Observasi Lahan',       cls: 'bg-blue-500/20 text-blue-400' },
+    completion:                 { label: 'Selesai Rekomendasi',   cls: 'bg-emerald-500/20 text-emerald-400' },
+    auth_login:                 { label: 'Login Sistem',          cls: 'bg-slate-500/30 text-slate-300' },
+    auth_logout:                { label: 'Logout',                cls: 'bg-slate-500/30 text-slate-300' },
+    fieldobservation_created:   { label: 'Tambah Observasi',      cls: 'bg-blue-500/20 text-blue-400' },
+    fieldobservation_updated:   { label: 'Edit Observasi',        cls: 'bg-sky-500/20 text-sky-400' },
+    fieldobservation_deleted:   { label: 'Hapus Observasi',       cls: 'bg-red-500/20 text-red-400' },
+    agriculturalarea_created:   { label: 'Tambah Lahan',          cls: 'bg-teal-500/20 text-teal-400' },
+    agriculturalarea_updated:   { label: 'Edit Lahan',            cls: 'bg-teal-500/20 text-teal-400' },
+    agriculturalarea_deleted:   { label: 'Hapus Lahan',           cls: 'bg-red-500/20 text-red-400' },
+    user_status_changed:        { label: 'Status Pengguna',       cls: 'bg-amber-500/20 text-amber-400' },
+    user_password_reset:        { label: 'Reset Password',        cls: 'bg-amber-500/20 text-amber-400' },
+    warning_sent:               { label: 'Peringatan Dikirim',    cls: 'bg-orange-500/20 text-orange-400' },
 };
-const badgeFor = (type) => BADGE[type] ?? { label: type.replace('_', ' '), cls: 'bg-amber-500/20 text-amber-400' };
+const badgeFor = (type) => BADGE[type] ?? { label: (type ?? '').replace(/_/g, ' '), cls: 'bg-amber-500/20 text-amber-400' };
+
+const FIELD_LABEL = {
+    agricultural_area_id:       'Lahan',
+    user_id:                    null,
+    id:                         null,
+    observation_date:           'Tanggal Observasi',
+    planting_cycle:             'Siklus Tanam',
+    soil_moisture:              'Kelembapan Tanah',
+    water_puddle:               'Genangan Air',
+    crop_condition:             'Kondisi Tanaman',
+    pest_indication:            'Indikasi Hama',
+    disease_indication:         'Indikasi Penyakit',
+    notes:                      'Catatan',
+    weather_temp:               'Suhu (°C)',
+    weather_condition:          'Kondisi Cuaca',
+    weather_precip_mm:          'Curah Hujan (mm)',
+    weather_humidity:           'Kelembapan Udara (%)',
+    recommendations_viewed_at:  null,
+    is_active:                  'Status Akun',
+    name:                       'Nama',
+    email:                      'Email',
+    role:                       'Peran',
+};
+const SKIP = ['updated_at', 'created_at'];
+const fieldLabel = (k) => (k in FIELD_LABEL ? FIELD_LABEL[k] : k.replace(/_/g, ' '));
 
 export default function ActivityLog({ logs, petaniList, filters }) {
     const [queryParams, setQueryParams] = useState({
@@ -199,23 +235,25 @@ export default function ActivityLog({ logs, petaniList, filters }) {
                                                 {log.new_values && (() => {
                                                     const newVal = typeof log.new_values === 'string' ? JSON.parse(log.new_values) : log.new_values;
                                                     const oldVal = typeof log.old_values === 'string' ? JSON.parse(log.old_values ?? '{}') : (log.old_values || {});
-                                                    const keys = Object.keys(newVal).filter((k) => !['updated_at', 'created_at'].includes(k));
+                                                    const keys = Object.keys(newVal).filter((k) => !SKIP.includes(k) && FIELD_LABEL[k] !== null);
                                                     if (!keys.length) return null;
                                                     return (
                                                         <div className="mt-2 text-xs bg-slate-800 rounded-lg border border-slate-700 p-2.5 space-y-1">
                                                             {keys.map((k) => {
-                                                                const nv = String(newVal[k]);
-                                                                const ov = oldVal[k] !== undefined ? String(oldVal[k]) : null;
+                                                                const nv = String(newVal[k] ?? '—');
+                                                                const ov = oldVal[k] !== undefined ? String(oldVal[k] ?? '—') : null;
                                                                 return (
-                                                                    <div key={k} className="flex items-center gap-2">
-                                                                        <span className="font-mono text-slate-500 w-24 truncate shrink-0">{k}:</span>
-                                                                        {ov !== null && ov !== nv && (
-                                                                            <>
-                                                                                <span className="text-red-400 line-through truncate max-w-[100px]">{ov}</span>
-                                                                                <span className="text-slate-600">→</span>
-                                                                            </>
-                                                                        )}
-                                                                        <span className="text-emerald-400 truncate max-w-[120px]">{nv}</span>
+                                                                    <div key={k} className="flex items-start gap-2">
+                                                                        <span className="text-slate-500 w-36 shrink-0 truncate">{fieldLabel(k)}:</span>
+                                                                        <span className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                                                            {ov !== null && ov !== nv && (
+                                                                                <>
+                                                                                    <span className="text-red-400 line-through break-all">{ov}</span>
+                                                                                    <span className="text-slate-600">→</span>
+                                                                                </>
+                                                                            )}
+                                                                            <span className="text-emerald-400 break-all">{nv}</span>
+                                                                        </span>
                                                                     </div>
                                                                 );
                                                             })}
