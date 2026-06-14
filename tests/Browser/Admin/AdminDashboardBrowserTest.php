@@ -16,12 +16,13 @@ use Tests\DuskTestCase;
  *
  * PRASYARAT:
  *   php artisan serve (di terminal terpisah)
- *   Database: agrisupport_dusk + PostGIS extension aktif
+ *   Database: northeast (testing) — bukan production
  */
 class AdminDashboardBrowserTest extends DuskTestCase
 {
     use DatabaseMigrations;
 
+    // TC-DASHBOARD-001
     public function test_admin_login_langsung_masuk_dashboard_admin(): void
     {
         $admin = User::factory()->admin()->create();
@@ -29,12 +30,13 @@ class AdminDashboardBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($admin) {
             $browser->loginAs($admin)
                     ->visit('/')
-                    ->waitForLocation('/admin/dashboard')
+                    ->waitForLocation('/admin/dashboard', 30)
                     ->assertPathIs('/admin/dashboard')
-                    ->assertSee('Dashboard Admin');
+                    ->assertSee('Dashboard');
         });
     }
 
+    // TC-DASHBOARD-002
     public function test_card_statistik_tampil_di_dashboard(): void
     {
         $admin   = User::factory()->admin()->create();
@@ -45,13 +47,70 @@ class AdminDashboardBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($admin) {
             $browser->loginAs($admin)
                     ->visit(route('admin.dashboard'))
-                    ->waitForText('Dashboard Admin');
-                    // TODO: ->assertSeeIn('[dusk="card-total-petani"]', '1')
-                    // ->assertSeeIn('[dusk="card-total-lahan"]', '1')
-                    // ->assertSeeIn('[dusk="card-total-observasi"]', '1');
+                    ->waitForText('Dashboard', 25)
+                    ->assertPresent('[dusk="card-total-petani"]')
+                    ->assertPresent('[dusk="card-total-lahan"]')
+                    ->assertPresent('[dusk="card-total-observasi"]')
+                    ->assertPresent('[dusk="card-tindakan-selesai"]');
         });
     }
 
+    // TC-DASHBOARD-003
+    public function test_grafik_distribusi_risiko_lahan_tampil(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $farmer = User::factory()->create();
+        $area   = AgriculturalArea::factory()->for($farmer)->create();
+        FieldObservation::factory()->forArea($area)->create();
+
+        $this->browse(function (Browser $browser) use ($admin) {
+            $browser->loginAs($admin)
+                    ->visit(route('admin.dashboard'))
+                    ->waitForText('Dashboard', 25)
+                    ->assertPresent('[dusk="risk-chart-section"]')
+                    ->assertSee('Distribusi Risiko Lahan');
+        });
+    }
+
+    // TC-DASHBOARD-004
+    public function test_grafik_tren_observasi_mingguan_tampil(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $farmer = User::factory()->create();
+        $area   = AgriculturalArea::factory()->for($farmer)->create();
+        FieldObservation::factory()->forArea($area)->create([
+            'observation_date' => now()->toDateString(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($admin) {
+            $browser->loginAs($admin)
+                    ->visit(route('admin.dashboard'))
+                    ->waitForText('Dashboard', 25)
+                    ->assertPresent('[dusk="trend-chart-section"]')
+                    ->assertSee('Tren Observasi');
+        });
+    }
+
+    // TC-DASHBOARD-005
+    public function test_tabel_aktivitas_observasi_terbaru_tampil(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $farmer = User::factory()->create();
+        $area   = AgriculturalArea::factory()->for($farmer)->create();
+        FieldObservation::factory()->forArea($area)->create([
+            'observation_date' => now()->toDateString(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($admin) {
+            $browser->loginAs($admin)
+                    ->visit(route('admin.dashboard'))
+                    ->waitForText('Dashboard', 25)
+                    ->assertPresent('[dusk="recent-activities-section"]')
+                    ->assertSee('Aktivitas Observasi Terbaru');
+        });
+    }
+
+    // TC-DASHBOARD-006
     public function test_navigasi_ke_manajemen_pengguna_dari_dashboard(): void
     {
         $admin = User::factory()->admin()->create();
@@ -59,9 +118,31 @@ class AdminDashboardBrowserTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($admin) {
             $browser->loginAs($admin)
                     ->visit(route('admin.dashboard'))
-                    ->waitForText('Dashboard Admin');
-                    // TODO: ->click('@link-manajemen-pengguna')
-                    // ->assertPathIs('/admin/pengguna');
+                    ->waitForText('Dashboard', 25)
+                    ->click('[dusk="nav-pengguna"]')
+                    ->waitForLocation('/admin/pengguna', 20)
+                    ->assertPathIs('/admin/pengguna');
+        });
+    }
+
+    // TC-DASHBOARD-007
+    public function test_link_lihat_semua_mengarah_ke_halaman_laporan(): void
+    {
+        $admin  = User::factory()->admin()->create();
+        $farmer = User::factory()->create();
+        $area   = AgriculturalArea::factory()->for($farmer)->create();
+        FieldObservation::factory()->forArea($area)->create([
+            'observation_date' => now()->toDateString(),
+        ]);
+
+        $this->browse(function (Browser $browser) use ($admin) {
+            $browser->loginAs($admin)
+                    ->visit(route('admin.dashboard'))
+                    ->waitForText('Dashboard', 25)
+                    ->scrollIntoView('[dusk="link-lihat-semua"]')
+                    ->click('[dusk="link-lihat-semua"]')
+                    ->waitForLocation('/admin/laporan', 30)
+                    ->assertPathIs('/admin/laporan');
         });
     }
 }

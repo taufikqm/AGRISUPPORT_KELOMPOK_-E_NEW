@@ -48,7 +48,8 @@ class DashboardController extends Controller
         AgriculturalArea::all('id')->each(function ($area) use (&$dist) {
             $obs = FieldObservation::where('agricultural_area_id', $area->id)
                 ->with('agriculturalArea:id,soil_type')
-                ->latest('observation_date')
+                ->orderByDesc('observation_date')
+                ->orderByDesc('id')
                 ->first();
 
             if (!$obs) {
