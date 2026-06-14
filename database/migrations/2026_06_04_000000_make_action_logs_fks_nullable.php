@@ -35,6 +35,7 @@ return new class extends Migration
             $table->dropConstrainedForeignId('agricultural_area_id');
         });
 
+        DB::statement('DELETE FROM action_logs WHERE recommendation_id IS NULL OR observation_id IS NULL');
         DB::statement('ALTER TABLE action_logs ALTER COLUMN recommendation_id SET NOT NULL');
         DB::statement('ALTER TABLE action_logs ALTER COLUMN observation_id SET NOT NULL');
     }

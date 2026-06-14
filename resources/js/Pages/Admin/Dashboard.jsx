@@ -18,9 +18,9 @@ const CROP_LABEL = {
 };
 
 /* ── Stat card kecil ── */
-function StatCard({ icon, label, value, accent }) {
+function StatCard({ icon, label, value, accent, dusk }) {
     return (
-        <div className="flex items-center gap-4 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4">
+        <div dusk={dusk} className="flex items-center gap-4 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4">
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${accent}`}>
                 {icon}
             </div>
@@ -52,6 +52,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                 {/* ── Row 1: Stat Cards ── */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <StatCard
+                        dusk="card-total-petani"
                         label="Total Petani"
                         value={stats.total_farmers ?? 0}
                         accent="bg-emerald-500/15"
@@ -62,6 +63,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                         }
                     />
                     <StatCard
+                        dusk="card-total-lahan"
                         label="Total Lahan"
                         value={stats.total_areas ?? 0}
                         accent="bg-sky-500/15"
@@ -72,6 +74,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                         }
                     />
                     <StatCard
+                        dusk="card-total-observasi"
                         label="Total Observasi"
                         value={stats.total_observations ?? 0}
                         accent="bg-violet-500/15"
@@ -82,6 +85,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                         }
                     />
                     <StatCard
+                        dusk="card-tindakan-selesai"
                         label="Tindakan Selesai"
                         value={stats.total_completed ?? 0}
                         accent="bg-amber-500/15"
@@ -97,7 +101,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
                     {/* Donut — distribusi risiko */}
-                    <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <div dusk="risk-chart-section" className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
                         <h2 className="text-sm font-bold text-white mb-1">Distribusi Risiko Lahan</h2>
                         <p className="text-xs text-slate-500 mb-4">Berdasarkan observasi terbaru tiap lahan.</p>
 
@@ -151,7 +155,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                     </div>
 
                     {/* Line chart — tren observasi 7 minggu */}
-                    <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <div dusk="trend-chart-section" className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5">
                         <h2 className="text-sm font-bold text-white mb-1">Tren Observasi (7 Minggu Terakhir)</h2>
                         <p className="text-xs text-slate-500 mb-4">Jumlah observasi baru yang masuk per minggu.</p>
 
@@ -196,7 +200,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                 </div>
 
                 {/* ── Row 3: Tabel 10 Aktivitas Terbaru ── */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                <div dusk="recent-activities-section" className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
                         <div>
                             <h2 className="text-sm font-bold text-white">Aktivitas Observasi Terbaru</h2>
@@ -204,6 +208,7 @@ export default function Dashboard({ stats = {}, riskDistribution = [], weeklyTre
                         </div>
                         <Link
                             href={route('admin.laporan.index')}
+                            dusk="link-lihat-semua"
                             className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
                         >
                             Lihat Semua →
