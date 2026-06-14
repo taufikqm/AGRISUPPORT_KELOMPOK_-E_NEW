@@ -242,7 +242,36 @@ function AreaFilter({ areas, selectedAreaId, onSelect, totalItems }) {
     );
 }
 
-export default function RekomendasiIndex({ items, areas = [] }) {
+const URGENCY_STYLE = {
+    SEGERA: 'bg-red-100 text-red-700 border-red-200',
+    TINGGI: 'bg-amber-100 text-amber-700 border-amber-200',
+    TERENCANA: 'bg-blue-100 text-blue-700 border-blue-200',
+    RENDAH: 'bg-slate-100 text-slate-600 border-slate-200',
+};
+
+function ManualRecCard({ rec }) {
+    const urgencyStyle = URGENCY_STYLE[rec.urgency] ?? URGENCY_STYLE.TINGGI;
+    const date = new Date(rec.date);
+    const formatted = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    return (
+        <div className="bg-white border border-blue-200 rounded-2xl shadow-sm overflow-hidden relative">
+            <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-blue-500" />
+            <div className="p-5 pl-7">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-[12px] font-black text-blue-500 uppercase tracking-wider">Admin</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${urgencyStyle}`}>
+                        {rec.urgency}
+                    </span>
+                </div>
+                <p className="text-[12px] text-slate-400 font-medium mb-2">{rec.area_name} · {formatted}</p>
+                <p className="text-[14px] text-slate-700 leading-relaxed">{rec.description}</p>
+            </div>
+        </div>
+    );
+}
+
+export default function RekomendasiIndex({ items, areas = [], manualRecs = [] }) {
     const [selectedAreaId, setSelectedAreaId] = useState(null);
 
     const filteredItems = useMemo(() => {
@@ -264,6 +293,25 @@ export default function RekomendasiIndex({ items, areas = [] }) {
                         Daftar rekomendasi diurutkan berdasarkan prioritas risiko.
                     </p>
                 </div>
+
+                {/* Rekomendasi Manual dari Admin */}
+                {manualRecs.length > 0 && (
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-3">
+                            <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                            </svg>
+                            <p className="text-[11px] font-black text-blue-500 uppercase tracking-wider">
+                                Pesan dari Admin ({manualRecs.length})
+                            </p>
+                        </div>
+                        <div className="space-y-3">
+                            {manualRecs.map(rec => (
+                                <ManualRecCard key={rec.id} rec={rec} />
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Filter Lahan */}
                 {areas.length > 1 && (

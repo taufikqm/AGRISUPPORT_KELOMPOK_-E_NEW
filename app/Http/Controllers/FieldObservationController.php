@@ -347,9 +347,27 @@ class FieldObservationController extends Controller
             ->sortByDesc('count')
             ->values();
 
+        $manualRecs = ActionLog::where('user_id', Auth::id())
+            ->where('action_type', 'manual')
+            ->with([
+                'recommendation:id,title,description,urgency,color',
+                'agriculturalArea:id,name',
+            ])
+            ->orderByDesc('performed_at')
+            ->get()
+            ->map(fn ($log) => [
+                'id'          => $log->id,
+                'area_name'   => $log->agriculturalArea?->name ?? 'Lahan',
+                'date'        => $log->performed_at?->toDateTimeString(),
+                'description' => $log->recommendation?->description ?? '',
+                'urgency'     => $log->recommendation?->urgency ?? 'TINGGI',
+            ])
+            ->values();
+
         return Inertia::render('RekomendasiIndex', [
-            'items' => $items,
-            'areas' => $areas,
+            'items'      => $items,
+            'areas'      => $areas,
+            'manualRecs' => $manualRecs,
         ]);
     }
 
