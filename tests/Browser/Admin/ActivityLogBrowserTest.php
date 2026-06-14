@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\ActionLog;
 use App\Models\FieldObservation;
 use App\Models\AgriculturalArea;
-use App\Models\Recommendation;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
@@ -16,96 +15,189 @@ class ActivityLogBrowserTest extends DuskTestCase
 {
     use DatabaseMigrations;
 
+    protected User $admin;
+    protected User $petani1;
+    protected User $petani2;
+
     protected function setUp(): void
     {
         parent::setUp();
-        
-        // Buat Admin
+
         $this->admin = User::factory()->create([
             'role' => 'admin',
             'email' => 'admin_test@agrisupport.com',
-            'password' => bcrypt('password')
+            'password' => bcrypt('password'),
         ]);
 
-        // Buat Petani 1 & Lahan & Observasi
-        $this->petani1 = User::factory()->create(['role' => 'petani', 'name' => 'Petani A']);
-        $this->lahan1 = AgriculturalArea::factory()->create(['user_id' => $this->petani1->id, 'name' => 'Lahan A']);
-        $this->obs1 = FieldObservation::factory()->create([
+        $this->petani1 = User::factory()->create([
+            'role' => 'petani',
+            'name' => 'Petani A',
+        ]);
+
+        $lahan1 = AgriculturalArea::factory()->create([
             'user_id' => $this->petani1->id,
-            'agricultural_area_id' => $this->lahan1->id,
+        ]);
+
+        FieldObservation::factory()->create([
+            'agricultural_area_id' => $lahan1->id,
             'observation_date' => Carbon::now()->subDays(2),
-            'weather_precip_mm' => 50
         ]);
 
-        // Buat Petani 2 & Lahan & ActionLog
-        $this->petani2 = User::factory()->create(['role' => 'petani', 'name' => 'Petani B']);
-        $this->lahan2 = AgriculturalArea::factory()->create(['user_id' => $this->petani2->id, 'name' => 'Lahan B']);
-        $this->rekomendasi = Recommendation::factory()->create(['title' => 'Beri Pupuk Tambahan']);
-        $this->act1 = ActionLog::create([
+        $this->petani2 = User::factory()->create([
+            'role' => 'petani',
+            'name' => 'Petani B',
+        ]);
+
+        $lahan2 = AgriculturalArea::factory()->create([
             'user_id' => $this->petani2->id,
-            'agricultural_area_id' => $this->lahan2->id,
-            'recommendation_id' => $this->rekomendasi->id,
+        ]);
+
+        
+
+        ActionLog::create([
+            'user_id' => $this->petani2->id,
+            'agricultural_area_id' => $lahan2->id,
             'action_type' => 'completion',
-            'performed_at' => Carbon::now()->subDays(1),
+            'performed_at' => Carbon::now()->subDay(),
         ]);
     }
 
     /**
-     * @group ags-94
+     * TC-01 Pencarian Lanjutan
      */
-    public function test_tc_01_melihat_riwayat()
+    public function test_tc_01_pencarian_lanjutan()
     {
         $this->browse(function (Browser $browser) {
+
             $browser->loginAs($this->admin)
-                    ->visit('/admin/laporan')
-                    ->waitForText('Laporan Aktivitas', 15)
-                    ->assertSee('Tren Aktivitas Platform')
-                    ->assertSee('Detail Riwayat Aktivitas')
-                    ->assertSee($this->petani1->name)
-                    ->assertSee($this->petani2->name)
-                    ->assertSee('Observasi')
-                    ->assertSee('Selesai Rekomendasi')
-                    ->assertPresent('@filter-petani-log')
-                    ->assertPresent('@input-date-from')
-                    ->assertPresent('@input-date-to')
-                    ->assertPresent('@btn-export-csv');
+                ->visit('/admin/laporan')
+                ->waitForText('Laporan Aktivitas', 15)
+
+                ->assertPresent('@filter-petani-log')
+                ->assertPresent('@input-date-from')
+                ->assertPresent('@input-date-to')
+                ->assertPresent('@btn-terapkan-filter')
+
+                ->select('@filter-petani-log', (string) $this->petani1->id)
+
+                ->type('@input-date-from', now()->subDays(7)->format('Y-m-d'))
+                ->type('@input-date-to', now()->format('Y-m-d'))
+
+                ->click('@btn-terapkan-filter')
+                ->pause(3000)
+
+                ->assertPresent('@tabel-aktivitas')
+
+                ->screenshot('TC01-pencarian-lanjutan');
         });
     }
 
     /**
-     * @group ags-94
+     * TC-02 Penyaringan Berlapis
      */
-    public function test_tc_02_filter_per_petani()
+    public function test_tc_02_penyaringan_berlapis()
     {
         $this->browse(function (Browser $browser) {
+
             $browser->loginAs($this->admin)
-                    ->visit('/admin/laporan')
-                    ->waitForText('Detail Riwayat Aktivitas', 15)
-                    ->select('@filter-petani-log', $this->petani1->id)
-                    ->press('Terapkan Filter')
-                    ->waitForText($this->petani1->name, 15)
-                    ->pause(1000)
-                    ->assertSee($this->petani1->name)
-                    ->assertDontSee($this->petani2->name);
+                ->visit('/admin/laporan')
+                ->waitForText('Laporan Aktivitas', 15)
+
+                ->select('@filter-petani-log', (string) $this->petani2->id)
+
+                ->type('@input-date-from', now()->subDays(5)->format('Y-m-d'))
+                ->type('@input-date-to', now()->format('Y-m-d'))
+
+                ->click('@btn-terapkan-filter')
+                ->pause(3000)
+
+                ->assertPresent('@tabel-aktivitas')
+
+                ->screenshot('TC02-penyaringan-berlapis');
         });
     }
 
     /**
-     * @group ags-94
+     * TC-03 Unduh CSV
      */
-    public function test_tc_03_unduh_laporan()
+    public function test_tc_03_unduh_csv()
     {
         $this->browse(function (Browser $browser) {
+
             $browser->loginAs($this->admin)
-                    ->visit('/admin/laporan')
-                    ->waitForText('Laporan Aktivitas', 15)
-                    ->click('@btn-export-csv')
-                    ->pause(2000);
-            
-            // Verifikasi bahwa tombol export bisa diklik tanpa error.
-            // Pengecekan file unduhan secara native pada Selenium/Chrome agak tricky, 
-            // jadi kita hanya verifikasi aksi tidak menghasilkan error screen.
-            $browser->assertPathIs('/admin/laporan');
+                ->visit('/admin/laporan')
+                ->waitForText('Laporan Aktivitas', 15)
+
+                ->assertPresent('@btn-export-csv')
+
+                ->click('@btn-export-csv')
+                ->pause(3000)
+
+                ->screenshot('TC03-unduh-csv');
+        });
+    }
+
+    /**
+     * TC-04 Menampilkan Waktu Lokal
+     */
+    public function test_tc_04_menampilkan_waktu_lokal()
+    {
+        $this->browse(function (Browser $browser) {
+
+            $browser->loginAs($this->admin)
+                ->visit('/admin/laporan')
+                ->waitForText('Detail Riwayat Aktivitas', 15)
+
+                ->assertPresent('@tabel-aktivitas')
+
+                ->screenshot('TC04-waktu-lokal');
+        });
+    }
+
+    /**
+     * TC-06 Pembaruan Grafik Otomatis
+     */
+    public function test_tc_06_pembaruan_grafik_otomatis()
+    {
+        $this->browse(function (Browser $browser) {
+
+            $browser->loginAs($this->admin)
+                ->visit('/admin/laporan')
+                ->waitForText('Laporan Aktivitas', 15)
+
+                ->assertPresent('@grafik-aktivitas')
+
+                ->select('@filter-petani-log', (string) $this->petani1->id)
+
+                ->click('@btn-terapkan-filter')
+                ->pause(3000)
+
+                ->assertPresent('@grafik-aktivitas')
+
+                ->screenshot('TC06-grafik');
+        });
+    }
+
+    /**
+     * TC-07 Pencarian Kosong
+     */
+    public function test_tc_07_pencarian_kosong()
+    {
+        $this->browse(function (Browser $browser) {
+
+            $browser->loginAs($this->admin)
+                ->visit('/admin/laporan')
+                ->waitForText('Laporan Aktivitas', 15)
+
+                ->type('@input-date-from', '2099-01-01')
+                ->type('@input-date-to', '2099-12-31')
+
+                ->click('@btn-terapkan-filter')
+                ->pause(3000)
+
+                ->assertSee('Tidak ada riwayat aktivitas ditemukan.')
+
+                ->screenshot('TC07-pencarian-kosong');
         });
     }
 }

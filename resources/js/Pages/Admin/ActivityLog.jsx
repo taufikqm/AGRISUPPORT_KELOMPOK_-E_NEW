@@ -131,6 +131,7 @@ export default function ActivityLog({ logs, petaniList, filters }) {
                         </div>
 
                         <button
+                            dusk="btn-terapkan-filter"
                             onClick={applyFilters}
                             className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors whitespace-nowrap"
                         >
@@ -161,7 +162,10 @@ export default function ActivityLog({ logs, petaniList, filters }) {
                 </div>
 
                 {/* Chart */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                
+                <div 
+                    dusk="grafik-aktivitas"
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
                     <h3 className="text-sm font-bold text-white mb-5">Tren Aktivitas Platform</h3>
                     <div className="h-64 w-full">
                         {chartData.length > 0 ? (
@@ -199,7 +203,9 @@ export default function ActivityLog({ logs, petaniList, filters }) {
                 </div>
 
                 {/* Tabel */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                <div 
+                    dusk="tabel-aktivitas"
+                    className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-800">
                         <h3 className="text-sm font-bold text-white">Detail Riwayat Aktivitas</h3>
                     </div>
@@ -286,6 +292,7 @@ export default function ActivityLog({ logs, petaniList, filters }) {
                                         <span key={i} className="px-3 py-1 text-xs text-slate-600 bg-slate-800 border border-slate-700 rounded-lg" dangerouslySetInnerHTML={{ __html: link.label }} />
                                     ) : (
                                         <button
+                                            dusk={`page-${link.label}`}
                                             key={i}
                                             onClick={() => router.get(link.url, queryParams, { preserveScroll: true, preserveState: true })}
                                             className={`px-3 py-1 text-xs border rounded-lg transition-colors ${
