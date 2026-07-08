@@ -211,16 +211,16 @@ export default function PetaRisiko({ areas = [], riskSummary = {} }) {
                             />
 
                             {/* Legenda */}
-                            <div className="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-md border border-[#e2e8f0] p-3 w-44">
+                            <div dusk="legenda-peta-risiko" className="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur rounded-xl shadow-md border border-[#e2e8f0] p-3 w-44">
                                 <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wide mb-2">Legenda</p>
                                 <div className="space-y-1.5">
                                     {LEGEND_ORDER.map((key) => (
-                                        <div key={key} className="flex items-center justify-between text-xs">
+                                        <div key={key} dusk={`legenda-${key}`} className="flex items-center justify-between text-xs">
                                             <span className="flex items-center gap-2">
                                                 <span className="w-3 h-3 rounded-sm" style={{ background: LEVEL_META[key].color }} />
                                                 <span className="text-[#475569]">{LEVEL_META[key].label}</span>
                                             </span>
-                                            <span className="font-bold text-[#1e293b]">{summary[key] ?? 0}</span>
+                                            <span dusk={`legenda-count-${key}`} className="font-bold text-[#1e293b]">{summary[key] ?? 0}</span>
                                         </div>
                                     ))}
                                 </div>
